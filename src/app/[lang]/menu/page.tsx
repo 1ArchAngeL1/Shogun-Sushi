@@ -1,0 +1,116 @@
+import { notFound } from "next/navigation";
+import type { Metadata } from "next";
+import { SiteHeader } from "@/components/SiteHeader";
+import { SiteFooter } from "@/components/SiteFooter";
+import { SeigahaBand } from "@/components/SeigahaBand";
+import { FlipCard } from "@/components/FlipCard";
+import { categoryEmoji } from "@/components/ItemArt";
+import { PineBranch, CliffPagoda } from "@/components/SumiE";
+import { categoryOrder, itemsByCategory } from "@/lib/menu";
+import { getDictionary, hasLocale, t } from "@/lib/i18n";
+
+export async function generateMetadata(
+  props: PageProps<"/[lang]/menu">,
+): Promise<Metadata> {
+  const { lang } = await props.params;
+  if (!hasLocale(lang)) return {};
+  const dict = await getDictionary(lang);
+  return { title: dict.meta.menuTitle, description: dict.meta.menuDesc };
+}
+
+export default async function MenuPage(props: PageProps<"/[lang]/menu">) {
+  const { lang } = await props.params;
+  if (!hasLocale(lang)) notFound();
+  const dict = await getDictionary(lang);
+
+  return (
+    <main className="bg-shogun-cream text-shogun-black min-h-screen">
+      <SiteHeader lang={lang} dict={dict} />
+
+      {/* ─── Seigaiha band — sits directly below the header ─ */}
+      <SeigahaBand />
+
+      {/* ─── Menu hero — packaging style ──────────────── */}
+      <section className="relative overflow-hidden bg-shogun-cream border-b border-shogun-black/10">
+
+        <div className="relative grain mx-auto max-w-6xl px-6 py-14 md:py-20">
+          {/* Right cliff art */}
+          <div className="absolute right-0 top-0 bottom-0 text-shogun-black opacity-90 pointer-events-none hidden md:block">
+            <CliffPagoda width={200} className="h-full w-auto" />
+          </div>
+          {/* Left pine */}
+          <div className="absolute -left-6 -bottom-2 text-shogun-black opacity-90 pointer-events-none">
+            <PineBranch width={360} className="hidden sm:block" />
+          </div>
+
+          <div className="relative">
+            <h1 className="font-display text-5xl md:text-7xl tracking-wider leading-[0.95]">
+              {dict.menu.title}
+            </h1>
+            <p className="mt-5 max-w-lg text-shogun-charcoal/80">
+              {dict.menu.subtitle}
+            </p>
+          </div>
+        </div>
+      </section>
+
+      {/* ─── Sticky category nav ──────────────────────── */}
+      <nav
+        aria-label="Menu categories"
+        className="sticky top-16 z-30 bg-shogun-cream/95 backdrop-blur border-b border-shogun-black/10"
+      >
+        <div className="mx-auto max-w-6xl px-2 sm:px-6">
+          <ul className="flex gap-1 overflow-x-auto no-scrollbar py-2 -mx-2 sm:mx-0 px-2 sm:px-0">
+            {categoryOrder.map((c) => (
+              <li key={c}>
+                <a
+                  href={`#${c}`}
+                  className="block whitespace-nowrap px-4 py-2.5 font-display tracking-[0.18em] text-xs sm:text-sm text-shogun-black/70 hover:text-shogun-red transition"
+                >
+                  {dict.categories[c].label.toUpperCase()}
+                </a>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </nav>
+
+      {/* ─── Category sections ────────────────────────── */}
+      <div className="mx-auto max-w-6xl px-4 sm:px-6 py-12 md:py-16 space-y-20">
+        {categoryOrder.map((cat) => {
+          const items = itemsByCategory(cat);
+          if (items.length === 0) return null;
+          return (
+            <section key={cat} id={cat} className="scroll-mt-32 sm:scroll-mt-36">
+              <div className="flex items-end justify-between mb-8 sm:mb-10">
+                <h2 className="font-display text-3xl sm:text-5xl tracking-wider">
+                  {dict.categories[cat].label.toUpperCase()}
+                </h2>
+                <div className="hidden sm:block text-shogun-black/40 font-display tracking-[0.25em] text-xs">
+                  {String(items.length).padStart(2, "0")} {dict.menu.items}{" "}
+                  {categoryEmoji(cat)}
+                </div>
+              </div>
+
+              <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6">
+                {items.map((item, i) => (
+                  <FlipCard
+                    key={item.slug}
+                    item={item}
+                    index={i}
+                    name={t(item.name, lang)}
+                    ingredients={t(item.ingredients, lang)}
+                  />
+                ))}
+              </div>
+            </section>
+          );
+        })}
+      </div>
+
+      <SeigahaBand flipped />
+
+      <SiteFooter lang={lang} dict={dict} />
+    </main>
+  );
+}
