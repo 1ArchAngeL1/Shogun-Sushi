@@ -23,7 +23,7 @@ export default async function LandingPage(props: PageProps<"/[lang]">) {
       <section className="bg-shogun-cream py-10 sm:py-14">
         <div className="mx-auto max-w-5xl px-4 sm:px-6">
           <div className="brush-slab py-7 sm:py-10 px-6 sm:px-10 text-center">
-            <p className="font-display text-shogun-cream tracking-[0.12em] sm:tracking-[0.18em] text-xl sm:text-3xl md:text-5xl leading-tight whitespace-nowrap">
+            <p className="font-display text-white tracking-[0.12em] sm:tracking-[0.18em] text-xl sm:text-3xl md:text-5xl leading-tight whitespace-nowrap">
               HONOUR <span className="text-shogun-orange">IN EVERY</span> ROLL
             </p>
             <div className="mt-4 flex items-center justify-center gap-3 text-shogun-cream/40">

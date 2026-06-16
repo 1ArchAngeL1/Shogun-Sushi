@@ -6,6 +6,8 @@
   --color-shogun-orange: #e65d26;
   --color-shogun-cream: #faf3e1;
   --color-shogun-charcoal: #34302f;
+  --color-shogun-ink: #0a0a0c;
+  --color-shogun-graphite: #17171b;
 
   --font-display: var(--font-display), var(--font-georgian), "Bebas Neue", system-ui, sans-serif;
   --font-brush: var(--font-brush), var(--font-georgian), "Zen Kurenaido", system-ui, sans-serif;
@@ -17,8 +19,9 @@ html[lang="ka"] {
 }
 
 :root {
-  --background: #faf3e1;
-  --foreground: #0d0d0e;
+  --background: #0a0a0c;
+  --foreground: #faf3e1;
+  color-scheme: dark;
 }
 
 html {
