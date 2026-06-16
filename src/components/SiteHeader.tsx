@@ -139,7 +139,7 @@ export function SiteHeader({
             </Suspense>
             <a
               href="tel:+995599130920"
-              className="inline-flex items-center gap-2 bg-shogun-red text-shogun-cream font-display tracking-[0.22em] text-sm px-5 py-2.5 hover:bg-shogun-black transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-shogun-red focus-visible:ring-offset-2 focus-visible:ring-offset-shogun-cream"
+              className="inline-flex items-center gap-2 bg-shogun-red text-shogun-cream font-display tracking-[0.22em] text-sm px-5 py-2.5 rounded-full hover:bg-shogun-black transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-shogun-red focus-visible:ring-offset-2 focus-visible:ring-offset-shogun-cream"
             >
               <PhoneIcon />
               {dict.nav.call}
@@ -206,7 +206,7 @@ export function SiteHeader({
             </Suspense>
             <a
               href="tel:+995599130920"
-              className="inline-flex items-center gap-2 bg-shogun-red text-shogun-cream font-display tracking-[0.22em] text-sm px-5 py-3 hover:bg-shogun-black transition-colors"
+              className="inline-flex items-center gap-2 bg-shogun-red text-shogun-cream font-display tracking-[0.22em] text-sm px-5 py-3 rounded-full hover:bg-shogun-black transition-colors"
             >
               <PhoneIcon />
               {dict.nav.call}

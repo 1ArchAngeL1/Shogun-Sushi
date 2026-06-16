@@ -88,7 +88,7 @@ export default async function ItemPage(
                 fill
                 sizes="(max-width: 768px) 100vw, 50vw"
                 preload
-                className="object-cover"
+                className="object-contain p-6 md:p-10"
               />
             </div>
           ) : (
@@ -182,7 +182,7 @@ export default async function ItemPage(
                         alt={t(r.name, lang)}
                         fill
                         sizes="(max-width: 640px) 100vw, 33vw"
-                        className="object-cover"
+                        className="object-contain p-3"
                       />
                     </div>
                   ) : (
