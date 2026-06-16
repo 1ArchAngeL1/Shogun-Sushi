@@ -52,7 +52,7 @@ const filenameBySlug: Record<string, string> = {
   "salmon-set": "ორაგულის სეტი.png",
   "unagi-set": "უნაგის სეტი.png",
   "crispy-set": "ხრაშუნა სეტი.png",
-  "shogun-set": "საფირმო სეტი.png",
+  "shogun-set": "შოგუნ სეტი.png",
   "signature-set": "საფირმო სეტი.png",
 
   // Drinks
