@@ -1,56 +1,74 @@
-import type { Category, MenuItem } from "./menu";
+import type { MenuItem } from "./menu";
 
-// Placeholder photography from Unsplash. Swap to local files in /public when
-// the real product shots are ready — just change the URL to a `/img/...` path.
-const photoQuery = "?w=720&q=80&auto=format&fit=crop";
+const PRODUCT_FOLDER = "/სუში გლოვოსთვის";
 
-const byCategory: Record<Category, string[]> = {
-  maki: [
-    "https://images.unsplash.com/photo-1579871494447-9811cf80d66c",
-    "https://images.unsplash.com/photo-1617196034796-73dfa7b1fd56",
-    "https://images.unsplash.com/photo-1607247098984-d8c4b3eb0e5b",
-  ],
-  nigiri: [
-    "https://images.unsplash.com/photo-1611143669185-af224c5e3252",
-    "https://images.unsplash.com/photo-1579584425555-c3ce17fd4351",
-    "https://images.unsplash.com/photo-1553621042-f6e147245754",
-  ],
-  sashimi: [
-    "https://images.unsplash.com/photo-1617196034183-421b4917c92d",
-    "https://images.unsplash.com/photo-1534482421-64566f976cfa",
-  ],
-  futomaki: [
-    "https://images.unsplash.com/photo-1583032015879-e5022cb87c6b",
-    "https://images.unsplash.com/photo-1607301405390-d831c242f59a",
-  ],
-  "fried-rolls": [
-    "https://images.unsplash.com/photo-1617196034796-73dfa7b1fd56",
-    "https://images.unsplash.com/photo-1559339352-11d035aa65de",
-  ],
-  uramaki: [
-    "https://images.unsplash.com/photo-1617196034796-73dfa7b1fd56",
-    "https://images.unsplash.com/photo-1626082896492-766af4eb6501",
-  ],
-  pushup: [
-    "https://images.unsplash.com/photo-1607301405390-d831c242f59a",
-    "https://images.unsplash.com/photo-1581781870027-04dca055ea1c",
-  ],
-  sets: [
-    "https://images.unsplash.com/photo-1553621042-f6e147245754",
-    "https://images.unsplash.com/photo-1611143669185-af224c5e3252",
-    "https://images.unsplash.com/photo-1583032015879-e5022cb87c6b",
-  ],
-  drinks: [
-    "https://images.unsplash.com/photo-1554866585-cd94860890b7",
-    "https://images.unsplash.com/photo-1437418747212-8d9709afab22",
-    "https://images.unsplash.com/photo-1437418747212-8d9709afab22",
-  ],
+const filenameBySlug: Record<string, string> = {
+  // Nigiri
+  "salmon-nigiri": "ორაგულის ნიგირი.png",
+  "unagi-nigiri": "უნაგის ნიგირი.png",
+
+  // Sashimi
+  "salmon-sashimi": "ორაგულის საშიმი.png",
+  "unagi-sashimi": "უნაგის საშიმი.png",
+
+  // Maki
+  "salmon-maki": "ორაგულის მაკი.png",
+  "cucumber-maki": "კიტრის მაკი.png",
+  "unagi-maki": "უნაგის მაკი.png",
+  "avocado-maki": "ავოკადოს მაკი.png",
+  "hiyashi-maki": "ჰიაშის მაკი.png",
+  "shrimp-maki": "კრევეტის მაკი.png",
+
+  // Uramaki
+  california: "კალიფორნია როლი.png",
+  philadelphia: "ფილადელფია როლი.png",
+  "dragon-roll": "დრაგონ როლი.png",
+  "veggie-roll": "ვეჯი როლი.png",
+  "ronin-roll": "საფირმო რონინ როლი.png",
+  "taicho-roll": "საფირმო ტაიჩო როლი.png",
+  "shogun-roll": "საფირმო შოგუნ როლი.png",
+
+  // Futomaki
+  "salmon-futomaki": "ორაგულის ფუტომაკი.png",
+  "shrimp-futomaki": "კრევეტის ფუტომაკი.png",
+  "unagi-futomaki": "უნაგის ფუტომაკი.png",
+
+  // Fried rolls
+  "crispy-salmon-maki": "ხრაშუნა ორაგულის მაკი.png",
+  "crispy-salmon-futomaki": "ხრაშუნა ორაგულის ფუტომაკი.png",
+  "crispy-unagi-futomaki": "ხრაშუნა უნაგის ფუტომაკი.png",
+  "crispy-salmon-keito": "ხრაშუნა ორაგულის კეიტო.png",
+  "crispy-shrimp-keito": "ხრაშუნა კრევეტის კეიტო.png",
+
+  // Push-up tubes — all share the single push-up product shot
+  "california-pushup": "ფუშ-აფ როლი.png",
+  "philadelphia-pushup": "ფუშ-აფ როლი.png",
+  "dragon-pushup": "ფუშ-აფ როლი.png",
+  "veggie-pushup": "ფუშ-აფ როლი.png",
+  "tensei-pushup": "ფუშ-აფ როლი.png",
+  "shogun-pushup": "ფუშ-აფ როლი.png",
+
+  // Sets
+  "salmon-set": "ორაგულის სეტი.png",
+  "unagi-set": "უნაგის სეტი.png",
+  "crispy-set": "ხრაშუნა სეტი.png",
+  "shogun-set": "საფირმო სეტი.png",
+  "signature-set": "საფირმო სეტი.png",
+
+  // Drinks
+  "coca-cola-classic": "კოლა კლასიკი.png",
+  "coca-cola-zero": "კოლა ზერო.png",
+  sprite: "სპრაიტი.png",
+  fanta: "ფანტა.png",
+  "orange-juice": "ფორთოხლის წვენი.png",
+  "peach-juice": "ატმის წვენი.png",
+  "cherry-juice": "ალუბლისწ ვენი.png",
+  "apple-juice": "ვაშლის წვენი.png",
+  "mixed-juice": "შერეული ხილის წვენი.png",
 };
 
-export function placeholderImage(item: MenuItem): string {
-  const pool = byCategory[item.category];
-  const hash = item.slug
-    .split("")
-    .reduce((acc, ch) => acc + ch.charCodeAt(0), 0);
-  return pool[hash % pool.length] + photoQuery;
+export function productImage(item: Pick<MenuItem, "slug">): string | null {
+  const name = filenameBySlug[item.slug];
+  if (!name) return null;
+  return encodeURI(`${PRODUCT_FOLDER}/${name}`);
 }

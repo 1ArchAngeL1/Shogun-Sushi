@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
@@ -6,6 +7,7 @@ import { SiteFooter } from "@/components/SiteFooter";
 import { ItemArt } from "@/components/ItemArt";
 import { PineBranch } from "@/components/SumiE";
 import { menu, findItem, itemsByCategory, badgeColor } from "@/lib/menu";
+import { productImage } from "@/lib/menuImages";
 import { getDictionary, hasLocale, locales, t } from "@/lib/i18n";
 
 export function generateStaticParams() {
@@ -47,6 +49,7 @@ export default async function ItemPage(
 
   const dict = await getDictionary(lang);
   const catLabel = dict.categories[item.category].label;
+  const photo = productImage(item);
   const related = itemsByCategory(item.category)
     .filter((m) => m.slug !== item.slug)
     .slice(0, 3);
@@ -76,10 +79,23 @@ export default async function ItemPage(
             <PineBranch width={300} />
           </div>
 
-          {/* Illustration */}
-          <div className="relative bg-shogun-cream border border-shogun-black/15 rounded-3xl p-8 md:p-12 grid place-items-center min-h-[260px] shadow-[0_28px_60px_-40px_rgba(0,0,0,0.35)]">
-            <ItemArt item={item} width={360} />
-          </div>
+          {/* Hero visual */}
+          {photo ? (
+            <div className="relative aspect-square bg-shogun-cream border border-shogun-black/15 rounded-3xl overflow-hidden shadow-[0_28px_60px_-40px_rgba(0,0,0,0.35)]">
+              <Image
+                src={photo}
+                alt={t(item.name, lang)}
+                fill
+                sizes="(max-width: 768px) 100vw, 50vw"
+                preload
+                className="object-cover"
+              />
+            </div>
+          ) : (
+            <div className="relative bg-shogun-cream border border-shogun-black/15 rounded-3xl p-8 md:p-12 grid place-items-center min-h-[260px] shadow-[0_28px_60px_-40px_rgba(0,0,0,0.35)]">
+              <ItemArt item={item} width={360} />
+            </div>
+          )}
 
           {/* Info */}
           <div className="relative">
@@ -151,30 +167,45 @@ export default async function ItemPage(
             </Link>
           </div>
           <div className="grid sm:grid-cols-3 gap-5">
-            {related.map((r) => (
-              <Link
-                key={r.slug}
-                href={`/${lang}/menu/${r.slug}`}
-                className="group bg-shogun-cream border border-shogun-black/15 rounded-2xl overflow-hidden hover:border-shogun-red transition"
-              >
-                <div className="bg-shogun-cream p-5 grid place-items-center min-h-[120px] border-b border-shogun-black/10">
-                  <ItemArt item={r} width={180} />
-                </div>
-                <div className="p-5">
-                  <div className="font-display text-xl tracking-wider">
-                    {t(r.name, lang).toUpperCase()}
+            {related.map((r) => {
+              const relatedPhoto = productImage(r);
+              return (
+                <Link
+                  key={r.slug}
+                  href={`/${lang}/menu/${r.slug}`}
+                  className="group bg-shogun-cream border border-shogun-black/15 rounded-2xl overflow-hidden hover:border-shogun-red transition"
+                >
+                  {relatedPhoto ? (
+                    <div className="relative aspect-[4/3] bg-shogun-cream border-b border-shogun-black/10 overflow-hidden">
+                      <Image
+                        src={relatedPhoto}
+                        alt={t(r.name, lang)}
+                        fill
+                        sizes="(max-width: 640px) 100vw, 33vw"
+                        className="object-cover"
+                      />
+                    </div>
+                  ) : (
+                    <div className="bg-shogun-cream p-5 grid place-items-center min-h-[120px] border-b border-shogun-black/10">
+                      <ItemArt item={r} width={180} />
+                    </div>
+                  )}
+                  <div className="p-5">
+                    <div className="font-display text-xl tracking-wider">
+                      {t(r.name, lang).toUpperCase()}
+                    </div>
+                    <div className="mt-3 flex items-center justify-between">
+                      <span className="font-display text-2xl text-shogun-red">
+                        {r.price} ₾
+                      </span>
+                      <span className="font-display tracking-[0.25em] text-xs text-shogun-black/50">
+                        {dict.detail.view}
+                      </span>
+                    </div>
                   </div>
-                  <div className="mt-3 flex items-center justify-between">
-                    <span className="font-display text-2xl text-shogun-red">
-                      {r.price} ₾
-                    </span>
-                    <span className="font-display tracking-[0.25em] text-xs text-shogun-black/50">
-                      {dict.detail.view}
-                    </span>
-                  </div>
-                </div>
-              </Link>
-            ))}
+                </Link>
+              );
+            })}
           </div>
         </section>
       )}
