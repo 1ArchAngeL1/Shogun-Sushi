@@ -76,7 +76,7 @@ export function SiteHeader({
                 window.scrollTo({ top: 0, behavior: "smooth" });
               }
             }}
-            className="flex items-center shrink-0 rounded-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-shogun-red focus-visible:ring-offset-2 focus-visible:ring-offset-shogun-cream"
+            className="flex itemws-center shrink-0 rounded-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-shogun-red focus-visible:ring-offset-2 focus-visible:ring-offset-shogun-cream"
           >
             <Image
               src={logoSrc}
