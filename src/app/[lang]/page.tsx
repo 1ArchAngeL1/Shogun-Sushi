@@ -3,6 +3,7 @@ import { SiteHeader } from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
 import { SeigahaBand } from "@/components/SeigahaBand";
 import { FlipCard } from "@/components/FlipCard";
+import { CategoryNav } from "@/components/CategoryNav";
 import { categoryEmoji } from "@/components/ItemArt";
 import { categoryOrder, itemsByCategory } from "@/lib/menu";
 import { getDictionary, hasLocale, t } from "@/lib/i18n";
@@ -38,25 +39,12 @@ export default async function LandingPage(props: PageProps<"/[lang]">) {
       </section>
 
       {/* ─── Sticky category nav ──────────────────────── */}
-      <nav
-        aria-label="Menu categories"
-        className="sticky top-20 sm:top-24 z-30 bg-shogun-cream/95 backdrop-blur border-b border-shogun-black/10"
-      >
-        <div className="mx-auto max-w-6xl px-2 sm:px-6">
-          <ul className="flex gap-1 overflow-x-auto no-scrollbar py-2 -mx-2 sm:mx-0 px-2 sm:px-0">
-            {categoryOrder.map((c) => (
-              <li key={c}>
-                <a
-                  href={`#${c}`}
-                  className="block whitespace-nowrap px-4 py-2.5 font-display tracking-[0.18em] text-xs sm:text-sm text-shogun-black/70 hover:text-shogun-red transition"
-                >
-                  {dict.categories[c].label.toUpperCase()}
-                </a>
-              </li>
-            ))}
-          </ul>
-        </div>
-      </nav>
+      <CategoryNav
+        categories={categoryOrder.map((c) => ({
+          slug: c,
+          label: dict.categories[c].label,
+        }))}
+      />
 
       {/* ─── Menu — directly rendered with float-up ───── */}
       <div className="mx-auto max-w-6xl px-4 sm:px-6 py-12 md:py-16 space-y-20">
@@ -69,10 +57,6 @@ export default async function LandingPage(props: PageProps<"/[lang]">) {
                 <h2 className="font-display text-3xl sm:text-5xl tracking-wider">
                   {dict.categories[cat].label.toUpperCase()}
                 </h2>
-                <div className="hidden sm:block text-shogun-black/40 font-display tracking-[0.25em] text-xs">
-                  {String(items.length).padStart(2, "0")} {dict.menu.items}{" "}
-                  {categoryEmoji(cat)}
-                </div>
               </div>
 
               <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6">

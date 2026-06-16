@@ -56,6 +56,8 @@ const filenameBySlug: Record<string, string> = {
   "signature-set": "საფირმო სეტი.png",
 
   // Drinks
+  water: "წყალი.jpeg",
+  nabeghlavi: "ნაბეღლავი.jpeg",
   "coca-cola-classic": "კოლა კლასიკი.png",
   "coca-cola-zero": "კოლა ზერო.png",
   sprite: "სპრაიტი.png",
