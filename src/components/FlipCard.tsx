@@ -67,7 +67,7 @@ export function FlipCard({
             price={item.price}
             salePrice={item.salePrice}
             className="font-display text-3xl text-shogun-orange leading-none"
-            oldClassName="font-display text-lg text-shogun-cream/40"
+            oldClassName="font-display text-lg text-shogun-red"
           />
         </div>
       </div>

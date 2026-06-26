@@ -39,11 +39,14 @@ export async function PUT(request: NextRequest) {
     const code = (err as NodeJS.ErrnoException)?.code;
     const detail =
       err instanceof Error ? `${code ? code + ": " : ""}${err.message}` : "";
-    // A read-only filesystem is the usual culprit on serverless hosts.
     const hint =
-      code === "EROFS" || code === "EACCES"
-        ? " The server's filesystem is read-only, so menu edits can't be persisted in this environment."
-        : "";
+      code === "EACCES"
+        ? " The app's user can't write to the data directory — fix its ownership/permissions or set MENU_DATA_DIR to a writable path."
+        : code === "EROFS"
+          ? " The server's filesystem is read-only, so menu edits can't be persisted here. Set MENU_DATA_DIR to a writable volume."
+          : code === "ENOSPC"
+            ? " The disk is full."
+            : "";
     return NextResponse.json(
       { error: `Failed to save menu to disk.${detail ? " " + detail : ""}${hint}` },
       { status: 500 },

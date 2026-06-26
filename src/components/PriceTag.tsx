@@ -26,10 +26,9 @@ export function PriceTag({
 
   return (
     <span className="inline-flex items-baseline gap-2">
-      <span className={`line-through opacity-60 ${oldClassName}`}>
-        {price} ₾
-      </span>
+      {/* Sale price on the left, struck-through old price (red) on the right. */}
       <span className={className}>{sale} ₾</span>
+      <span className={`line-through ${oldClassName}`}>{price} ₾</span>
     </span>
   );
 }

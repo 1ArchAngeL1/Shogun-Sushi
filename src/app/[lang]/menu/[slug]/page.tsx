@@ -128,7 +128,7 @@ export default async function ItemPage(
                 price={item.price}
                 salePrice={item.salePrice}
                 className="font-display text-6xl text-shogun-red"
-                oldClassName="font-display text-3xl text-shogun-black/40"
+                oldClassName="font-display text-3xl text-shogun-red/70"
               />
             </div>
           </div>
@@ -203,7 +203,7 @@ export default async function ItemPage(
                         price={r.price}
                         salePrice={r.salePrice}
                         className="font-display text-2xl text-shogun-red"
-                        oldClassName="font-display text-base text-shogun-black/40"
+                        oldClassName="font-display text-base text-shogun-red/70"
                       />
                       <span className="font-display tracking-[0.25em] text-xs text-shogun-black/50">
                         {dict.detail.view}
