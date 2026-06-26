@@ -13,15 +13,47 @@ export type Category =
 
 export type Badge = "signature" | "veggie" | "spicy" | "new" | "popular" | "gluten-free";
 
+export const allBadges: Badge[] = [
+  "signature",
+  "veggie",
+  "spicy",
+  "new",
+  "popular",
+  "gluten-free",
+];
+
 export type MenuItem = {
   slug: string;
   name: Translatable<string>;
   japaneseName: string;
-  category: Category;
+  // Category id. Built-in ids are listed in `Category`, but the admin panel can
+  // create custom categories, so any string is valid at runtime.
+  category: Category | (string & {});
   ingredients: Translatable<string[]>;
   description: Translatable<string>;
   price: number;
   badges?: Badge[];
+  // Path to the product image, usable directly as a `next/image` src
+  // (e.g. "/uploads/foo.png"). Null/undefined falls back to generated art.
+  image?: string | null;
+};
+
+// ── Editable-store shapes (client-safe) ────────────────────────────────
+// The live menu is persisted as JSON and edited through the admin panel.
+// These types describe that document; the store lives in `menu-store.ts`.
+
+export type StoredCategory = {
+  /** Stable id used in URLs / anchors and referenced by items. */
+  id: string;
+  /** Bilingual display label. */
+  label: Translatable<string>;
+};
+
+export type StoredItem = MenuItem;
+
+export type MenuData = {
+  categories: StoredCategory[];
+  items: StoredItem[];
 };
 
 export const categoryOrder: Category[] = [

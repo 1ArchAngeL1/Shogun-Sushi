@@ -1,7 +1,6 @@
 import Image from "next/image";
 import logoSrc from "../../public/logo.png";
 import type { MenuItem } from "@/lib/menu";
-import { productImage } from "@/lib/menuImages";
 
 export function FlipCard({
   item,
@@ -14,7 +13,7 @@ export function FlipCard({
   name: string;
   ingredients: string[];
 }) {
-  const photo = productImage(item);
+  const photo = item.image ?? null;
 
   return (
     <article

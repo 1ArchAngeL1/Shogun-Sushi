@@ -122,7 +122,7 @@ export function ItemArt({
   return wrap(<SushiTube filling={fillingFor(item.slug)} width={width} />);
 }
 
-export function categoryEmoji(category: Category): string {
+export function categoryEmoji(category: Category | (string & {})): string {
   switch (category) {
     case "maki":
       return "🍣";
@@ -142,5 +142,8 @@ export function categoryEmoji(category: Category): string {
       return "🍱";
     case "drinks":
       return "🥤";
+    default:
+      // Custom categories created via the admin panel.
+      return "🍽️";
   }
 }

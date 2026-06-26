@@ -6,22 +6,20 @@ import { SiteHeader } from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
 import { ItemArt } from "@/components/ItemArt";
 import { PineBranch } from "@/components/SumiE";
-import { menu, findItem, itemsByCategory, badgeColor } from "@/lib/menu";
-import { productImage } from "@/lib/menuImages";
-import { getDictionary, hasLocale, locales, t } from "@/lib/i18n";
+import { badgeColor } from "@/lib/menu";
+import { getMenuData } from "@/lib/menu-store";
+import { getDictionary, hasLocale, t } from "@/lib/i18n";
 
-export function generateStaticParams() {
-  return locales.flatMap((lang) =>
-    menu.map((m) => ({ lang, slug: m.slug })),
-  );
-}
+// Read the editable menu store fresh on every request so admin edits show live.
+export const dynamic = "force-dynamic";
 
 export async function generateMetadata(
   props: PageProps<"/[lang]/menu/[slug]">,
 ): Promise<Metadata> {
   const { lang, slug } = await props.params;
   if (!hasLocale(lang)) return {};
-  const item = findItem(slug);
+  const { items } = await getMenuData();
+  const item = items.find((m) => m.slug === slug);
   if (!item) return { title: "Not found · Shogun Sushi" };
   return {
     title: `${t(item.name, lang)} · Shogun Sushi`,
@@ -44,14 +42,16 @@ export default async function ItemPage(
 ) {
   const { lang, slug } = await props.params;
   if (!hasLocale(lang)) notFound();
-  const item = findItem(slug);
+  const { categories, items } = await getMenuData();
+  const item = items.find((m) => m.slug === slug);
   if (!item) notFound();
 
   const dict = await getDictionary(lang);
-  const catLabel = dict.categories[item.category].label;
-  const photo = productImage(item);
-  const related = itemsByCategory(item.category)
-    .filter((m) => m.slug !== item.slug)
+  const category = categories.find((c) => c.id === item.category);
+  const catLabel = category ? t(category.label, lang) : item.category;
+  const photo = item.image ?? null;
+  const related = items
+    .filter((m) => m.category === item.category && m.slug !== item.slug)
     .slice(0, 3);
 
   return (
@@ -168,7 +168,7 @@ export default async function ItemPage(
           </div>
           <div className="grid sm:grid-cols-3 gap-5">
             {related.map((r) => {
-              const relatedPhoto = productImage(r);
+              const relatedPhoto = r.image ?? null;
               return (
                 <Link
                   key={r.slug}

@@ -6,8 +6,11 @@ import { SeigahaBand } from "@/components/SeigahaBand";
 import { FlipCard } from "@/components/FlipCard";
 import { categoryEmoji } from "@/components/ItemArt";
 import { PineBranch, CliffPagoda } from "@/components/SumiE";
-import { categoryOrder, itemsByCategory } from "@/lib/menu";
+import { getMenuData } from "@/lib/menu-store";
 import { getDictionary, hasLocale, t } from "@/lib/i18n";
+
+// Read the editable menu store fresh on every request so admin edits show live.
+export const dynamic = "force-dynamic";
 
 export async function generateMetadata(
   props: PageProps<"/[lang]/menu">,
@@ -22,6 +25,7 @@ export default async function MenuPage(props: PageProps<"/[lang]/menu">) {
   const { lang } = await props.params;
   if (!hasLocale(lang)) notFound();
   const dict = await getDictionary(lang);
+  const { categories, items } = await getMenuData();
 
   return (
     <main className="bg-shogun-cream text-shogun-black min-h-screen">
@@ -61,13 +65,13 @@ export default async function MenuPage(props: PageProps<"/[lang]/menu">) {
       >
         <div className="mx-auto max-w-6xl px-2 sm:px-6">
           <ul className="flex gap-1 overflow-x-auto no-scrollbar py-2 -mx-2 sm:mx-0 px-2 sm:px-0">
-            {categoryOrder.map((c) => (
-              <li key={c}>
+            {categories.map((c) => (
+              <li key={c.id}>
                 <a
-                  href={`#${c}`}
+                  href={`#${c.id}`}
                   className="block whitespace-nowrap px-4 py-2.5 font-display tracking-[0.18em] text-xs sm:text-sm text-shogun-black/70 hover:text-shogun-red transition"
                 >
-                  {dict.categories[c].label.toUpperCase()}
+                  {t(c.label, lang).toUpperCase()}
                 </a>
               </li>
             ))}
@@ -77,23 +81,23 @@ export default async function MenuPage(props: PageProps<"/[lang]/menu">) {
 
       {/* ─── Category sections ────────────────────────── */}
       <div className="mx-auto max-w-6xl px-4 sm:px-6 py-12 md:py-16 space-y-20">
-        {categoryOrder.map((cat) => {
-          const items = itemsByCategory(cat);
-          if (items.length === 0) return null;
+        {categories.map((cat) => {
+          const catItems = items.filter((m) => m.category === cat.id);
+          if (catItems.length === 0) return null;
           return (
-            <section key={cat} id={cat} className="scroll-mt-32 sm:scroll-mt-36">
+            <section key={cat.id} id={cat.id} className="scroll-mt-32 sm:scroll-mt-36">
               <div className="flex items-end justify-between mb-8 sm:mb-10">
                 <h2 className="font-display text-3xl sm:text-5xl tracking-wider">
-                  {dict.categories[cat].label.toUpperCase()}
+                  {t(cat.label, lang).toUpperCase()}
                 </h2>
                 <div className="hidden sm:block text-shogun-black/40 font-display tracking-[0.25em] text-xs">
-                  {String(items.length).padStart(2, "0")} {dict.menu.items}{" "}
-                  {categoryEmoji(cat)}
+                  {String(catItems.length).padStart(2, "0")} {dict.menu.items}{" "}
+                  {categoryEmoji(cat.id)}
                 </div>
               </div>
 
               <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6">
-                {items.map((item, i) => (
+                {catItems.map((item, i) => (
                   <FlipCard
                     key={item.slug}
                     item={item}

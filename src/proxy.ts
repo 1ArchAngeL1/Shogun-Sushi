@@ -4,6 +4,10 @@ import { locales, defaultLocale } from "@/lib/i18n.client";
 export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
+  // Admin panel and API routes are not localized — let them through untouched.
+  if (pathname === "/admin" || pathname.startsWith("/admin/")) return;
+  if (pathname.startsWith("/api/")) return;
+
   // Already prefixed with a locale — let it through.
   const hasLocale = locales.some(
     (loc) => pathname === `/${loc}` || pathname.startsWith(`/${loc}/`),

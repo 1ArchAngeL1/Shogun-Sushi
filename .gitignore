@@ -24,6 +24,10 @@
 .DS_Store
 *.pem
 
+# admin panel runtime state (editable menu store + uploaded images)
+/data
+/public/uploads
+
 # debug
 npm-debug.log*
 yarn-debug.log*
