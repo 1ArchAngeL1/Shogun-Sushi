@@ -6,6 +6,7 @@ import { SiteHeader } from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
 import { ItemArt } from "@/components/ItemArt";
 import { PineBranch } from "@/components/SumiE";
+import { PriceTag } from "@/components/PriceTag";
 import { badgeColor } from "@/lib/menu";
 import { getMenuData } from "@/lib/menu-store";
 import { getDictionary, hasLocale, t } from "@/lib/i18n";
@@ -123,9 +124,12 @@ export default async function ItemPage(
             </p>
 
             <div className="mt-8 flex items-baseline gap-6">
-              <div className="font-display text-6xl text-shogun-red">
-                {item.price} ₾
-              </div>
+              <PriceTag
+                price={item.price}
+                salePrice={item.salePrice}
+                className="font-display text-6xl text-shogun-red"
+                oldClassName="font-display text-3xl text-shogun-black/40"
+              />
             </div>
           </div>
         </div>
@@ -195,9 +199,12 @@ export default async function ItemPage(
                       {t(r.name, lang).toUpperCase()}
                     </div>
                     <div className="mt-3 flex items-center justify-between">
-                      <span className="font-display text-2xl text-shogun-red">
-                        {r.price} ₾
-                      </span>
+                      <PriceTag
+                        price={r.price}
+                        salePrice={r.salePrice}
+                        className="font-display text-2xl text-shogun-red"
+                        oldClassName="font-display text-base text-shogun-black/40"
+                      />
                       <span className="font-display tracking-[0.25em] text-xs text-shogun-black/50">
                         {dict.detail.view}
                       </span>

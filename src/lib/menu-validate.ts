@@ -98,6 +98,17 @@ function normalizeItem(
     throw new Error(`Item "${slug}" has an invalid price.`);
   }
 
+  // Optional sale price. Only kept when it's a positive number strictly below
+  // the regular price; anything else (empty, zero, or ≥ price) clears the sale.
+  let salePrice: number | null = null;
+  if (it.salePrice !== null && it.salePrice !== undefined && it.salePrice !== "") {
+    const sp =
+      typeof it.salePrice === "number" ? it.salePrice : Number(it.salePrice);
+    if (Number.isFinite(sp) && sp > 0 && sp < price) {
+      salePrice = sp;
+    }
+  }
+
   const desc = (it.description ?? {}) as Record<string, unknown>;
   const ingredients = (it.ingredients ?? {}) as Record<string, unknown>;
 
@@ -124,6 +135,7 @@ function normalizeItem(
       ka: asString(desc.ka),
     },
     price,
+    salePrice,
     badges,
     image,
   };

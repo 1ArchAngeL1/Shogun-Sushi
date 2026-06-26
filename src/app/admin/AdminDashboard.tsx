@@ -2,6 +2,7 @@
 
 import { useCallback, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
+import { saleOf } from "@/lib/menu";
 import type { MenuData, StoredCategory, StoredItem } from "@/lib/menu";
 
 type SaveState = "idle" | "saving" | "saved" | "error";
@@ -365,6 +366,7 @@ function ItemsPanel({
       ) as StoredItem["ingredients"],
       description: blankTranslatable(locales, "") as StoredItem["description"],
       price: 0,
+      salePrice: null,
       badges: [],
       image: null,
     };
@@ -506,7 +508,16 @@ function ItemCard({
             {item.name[locales[0] as keyof typeof item.name] || item.slug}
           </div>
           <div className="text-xs text-shogun-cream/40 truncate">
-            {item.category} · {item.price} ₾
+            {item.category} ·{" "}
+            {saleOf(item) != null ? (
+              <>
+                <span className="line-through">{item.price}</span>{" "}
+                <span className="text-shogun-orange">{item.salePrice} ₾</span>
+                <span className="ml-1 text-shogun-orange">· SALE</span>
+              </>
+            ) : (
+              <>{item.price} ₾</>
+            )}
           </div>
         </button>
         <div className="flex items-center gap-1">
@@ -575,7 +586,7 @@ function ItemCard({
             ))}
           </div>
 
-          <div className="grid sm:grid-cols-2 gap-3">
+          <div className="grid sm:grid-cols-3 gap-3">
             <LabeledInput
               label="Japanese name (optional)"
               value={item.japaneseName}
@@ -585,6 +596,16 @@ function ItemCard({
               label="Price (₾)"
               value={item.price}
               onChange={(v) => setField((it) => (it.price = v))}
+            />
+            <LabeledNumberOptional
+              label="Sale price (₾) — optional"
+              value={item.salePrice ?? null}
+              onChange={(v) => setField((it) => (it.salePrice = v))}
+              hint={
+                item.salePrice != null && item.salePrice >= item.price
+                  ? "Must be lower than the price to show as a sale."
+                  : "Leave empty for no sale."
+              }
             />
           </div>
 
@@ -816,6 +837,40 @@ function LabeledNumber({
         onChange={(e) => onChange(parseFloat(e.target.value) || 0)}
         className={inputCls}
       />
+    </label>
+  );
+}
+
+function LabeledNumberOptional({
+  label,
+  value,
+  onChange,
+  hint,
+}: {
+  label: string;
+  value: number | null;
+  onChange: (v: number | null) => void;
+  hint?: string;
+}) {
+  return (
+    <label className="block">
+      {fieldLabel(label)}
+      <input
+        type="number"
+        step="0.1"
+        min="0"
+        value={value == null ? "" : value}
+        onChange={(e) => {
+          const v = e.target.value;
+          onChange(v === "" ? null : parseFloat(v) || 0);
+        }}
+        className={inputCls}
+      />
+      {hint && (
+        <span className="mt-1 block text-[11px] text-shogun-cream/40">
+          {hint}
+        </span>
+      )}
     </label>
   );
 }

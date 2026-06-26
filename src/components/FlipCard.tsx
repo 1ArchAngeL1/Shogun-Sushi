@@ -1,6 +1,7 @@
 import Image from "next/image";
 import logoSrc from "../../public/logo.png";
 import type { MenuItem } from "@/lib/menu";
+import { PriceTag } from "./PriceTag";
 
 export function FlipCard({
   item,
@@ -62,9 +63,12 @@ export function FlipCard({
         ) : null}
 
         <div className="mt-auto pt-3 flex items-baseline justify-between border-t border-shogun-cream/10">
-          <span className="font-display text-3xl text-shogun-orange leading-none">
-            {item.price} ₾
-          </span>
+          <PriceTag
+            price={item.price}
+            salePrice={item.salePrice}
+            className="font-display text-3xl text-shogun-orange leading-none"
+            oldClassName="font-display text-lg text-shogun-cream/40"
+          />
         </div>
       </div>
     </article>

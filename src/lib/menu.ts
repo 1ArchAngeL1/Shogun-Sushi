@@ -32,6 +32,9 @@ export type MenuItem = {
   ingredients: Translatable<string[]>;
   description: Translatable<string>;
   price: number;
+  // Optional discounted price. When set (and lower than `price`), the item is
+  // "on sale": `price` is shown struck through and `salePrice` is the new price.
+  salePrice?: number | null;
   badges?: Badge[];
   // Path to the product image, usable directly as a `next/image` src
   // (e.g. "/uploads/foo.png"). Null/undefined falls back to generated art.
@@ -931,6 +934,20 @@ export const menu: MenuItem[] = [
     price: 6,
   },
 ];
+
+/**
+ * An item is "on sale" only when it has a positive sale price that is strictly
+ * lower than the regular price. Returns the discounted price, else null.
+ */
+export const saleOf = (item: {
+  price: number;
+  salePrice?: number | null;
+}): number | null => {
+  const sp = item.salePrice;
+  return typeof sp === "number" && Number.isFinite(sp) && sp > 0 && sp < item.price
+    ? sp
+    : null;
+};
 
 export const itemsByCategory = (category: Category): MenuItem[] =>
   menu.filter((m) => m.category === category);
