@@ -1,6 +1,5 @@
 import Image from "next/image";
 import Link from "next/link";
-import {PineBranch} from "./SumiE";
 import logoSrc from "../../public/logo.png";
 import treeSrc from "../../public/shogun-tree.png";
 import type {Locale} from "@/lib/i18n.client";
@@ -15,13 +14,6 @@ export function SiteFooter({
 }) {
     return (
         <footer className="relative bg-shogun-cream text-shogun-charcoal border-t border-shogun-black/10">
-            {/* Top sumi-e accent */}
-            <div className="relative overflow-hidden h-12 sm:h-16">
-                <div className="absolute left-0 top-0 text-shogun-black opacity-90">
-                    <PineBranch width={420}/>
-                </div>
-            </div>
-
             <div className="relative mx-auto max-w-6xl px-6 py-12 grid gap-10 md:grid-cols-4">
                 <Image
                     src={treeSrc}
