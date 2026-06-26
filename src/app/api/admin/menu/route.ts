@@ -34,9 +34,18 @@ export async function PUT(request: NextRequest) {
 
   try {
     await saveMenuData(clean);
-  } catch {
+  } catch (err) {
+    console.error("[admin/menu] save failed:", err);
+    const code = (err as NodeJS.ErrnoException)?.code;
+    const detail =
+      err instanceof Error ? `${code ? code + ": " : ""}${err.message}` : "";
+    // A read-only filesystem is the usual culprit on serverless hosts.
+    const hint =
+      code === "EROFS" || code === "EACCES"
+        ? " The server's filesystem is read-only, so menu edits can't be persisted in this environment."
+        : "";
     return NextResponse.json(
-      { error: "Failed to save menu to disk." },
+      { error: `Failed to save menu to disk.${detail ? " " + detail : ""}${hint}` },
       { status: 500 },
     );
   }

@@ -26,7 +26,12 @@ import { ka } from "./dictionaries/ka";
 
 export type { MenuData, StoredCategory, StoredItem } from "./menu";
 
-const DATA_DIR = path.join(process.cwd(), "data");
+// Where the editable menu is persisted. Defaults to `<project>/data`, but can be
+// pointed at a writable location via the `MENU_DATA_DIR` env var. On self-hosted
+// or containerized deployments the app directory is often read-only or owned by
+// another user, so set MENU_DATA_DIR to a writable volume (e.g. /var/lib/shogun).
+const DATA_DIR =
+  process.env.MENU_DATA_DIR?.trim() || path.join(process.cwd(), "data");
 const DATA_FILE = path.join(DATA_DIR, "menu.json");
 
 /** Build the initial dataset from the original static menu + dictionaries. */
