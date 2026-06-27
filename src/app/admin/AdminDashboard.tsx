@@ -1,6 +1,13 @@
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { useRouter } from "next/navigation";
 import { saleOf } from "@/lib/menu";
 import type { MenuData, StoredCategory, StoredItem } from "@/lib/menu";
@@ -8,6 +15,10 @@ import type { MenuData, StoredCategory, StoredItem } from "@/lib/menu";
 type SaveState = "idle" | "saving" | "saved" | "error";
 
 const LOCALE_LABEL: Record<string, string> = { en: "English", ka: "ქართული" };
+
+/** useLayoutEffect that degrades to useEffect during SSR (avoids the warning). */
+const useIsoLayoutEffect =
+  typeof window !== "undefined" ? useLayoutEffect : useEffect;
 
 export function AdminDashboard({
   initialData,
@@ -340,14 +351,103 @@ function ItemsPanel({
 }) {
   const [filter, setFilter] = useState<string>("all");
   const [openSlug, setOpenSlug] = useState<string | null>(null);
+  const [movedSlug, setMovedSlug] = useState<string | null>(null);
 
-  const visible = data.items
-    .map((it, idx) => ({ it, idx }))
-    .filter(({ it }) => filter === "all" || it.category === filter);
+  // Live <li> elements keyed by slug, used for FLIP reorder animations.
+  const itemEls = useRef(new Map<string, HTMLLIElement>());
+  const registerEl = useCallback((slug: string, el: HTMLLIElement | null) => {
+    if (el) itemEls.current.set(slug, el);
+    else itemEls.current.delete(slug);
+  }, []);
+  // Bounding rects captured right before a reorder mutation.
+  const flipBefore = useRef<Map<string, DOMRect> | null>(null);
 
-  function addItem() {
-    const category =
-      filter !== "all" ? filter : (data.categories[0]?.id ?? "");
+  // After a reorder commits, slide each card from its old position to its new
+  // one (FLIP). Runs every render but is a no-op unless a reorder armed it.
+  useIsoLayoutEffect(() => {
+    const before = flipBefore.current;
+    if (!before) return;
+    flipBefore.current = null;
+
+    const reduce = window.matchMedia(
+      "(prefers-reduced-motion: reduce)",
+    ).matches;
+    if (reduce) return;
+
+    const moves: { el: HTMLLIElement; dx: number; dy: number }[] = [];
+    itemEls.current.forEach((el, slug) => {
+      const prev = before.get(slug);
+      if (!prev) return;
+      const now = el.getBoundingClientRect();
+      const dx = prev.left - now.left;
+      const dy = prev.top - now.top;
+      if (dx || dy) moves.push({ el, dx, dy });
+    });
+    if (moves.length === 0) return;
+
+    // Invert: jump back to the old position with no transition…
+    for (const { el, dx, dy } of moves) {
+      el.style.transition = "none";
+      el.style.transform = `translate(${dx}px, ${dy}px)`;
+    }
+    void document.body.offsetHeight; // one forced reflow for the whole batch
+    // …then play: animate to the natural (new) position.
+    for (const { el } of moves) {
+      el.style.transition = "transform 320ms cubic-bezier(0.22, 1, 0.36, 1)";
+      el.style.transform = "";
+    }
+    const t = setTimeout(() => {
+      for (const { el } of moves) el.style.transition = "";
+    }, 360);
+    return () => clearTimeout(t);
+  });
+
+  // Fade out the "just moved" highlight shortly after a move.
+  useEffect(() => {
+    if (!movedSlug) return;
+    const t = setTimeout(() => setMovedSlug(null), 900);
+    return () => clearTimeout(t);
+  }, [movedSlug]);
+
+  // Group items into per-category "islands", preserving each item's global
+  // index so reordering can swap the underlying array entries. Categories are
+  // listed in category order (matching the public menu); any item whose
+  // category no longer exists is collected into an "uncategorised" island.
+  const groups = useMemo(() => {
+    const byCat = new Map<string, { it: StoredItem; idx: number }[]>();
+    data.items.forEach((it, idx) => {
+      const list = byCat.get(it.category) ?? [];
+      list.push({ it, idx });
+      byCat.set(it.category, list);
+    });
+
+    const known = new Set(data.categories.map((c) => c.id));
+    const result = data.categories
+      .filter((c) => filter === "all" || c.id === filter)
+      .map((c) => ({
+        id: c.id,
+        label: (c.label[locales[0] as keyof typeof c.label] as string) ?? c.id,
+        items: byCat.get(c.id) ?? [],
+        orphan: false,
+      }));
+
+    if (filter === "all") {
+      const orphans = data.items
+        .map((it, idx) => ({ it, idx }))
+        .filter(({ it }) => !known.has(it.category));
+      if (orphans.length > 0) {
+        result.push({
+          id: "__uncategorised__",
+          label: "Uncategorised",
+          items: orphans,
+          orphan: true,
+        });
+      }
+    }
+    return result;
+  }, [data.items, data.categories, filter, locales]);
+
+  function addItem(category: string) {
     if (!category) return;
     // Unique slug.
     let n = 1;
@@ -371,7 +471,16 @@ function ItemsPanel({
       image: null,
     };
     mutate((d) => {
-      d.items.push(structuredClone(blank));
+      // Insert at the end of this category's group rather than the very end,
+      // so a new item lands inside its island.
+      let insertAt = d.items.length;
+      for (let i = d.items.length - 1; i >= 0; i--) {
+        if (d.items[i].category === category) {
+          insertAt = i + 1;
+          break;
+        }
+      }
+      d.items.splice(insertAt, 0, structuredClone(blank));
     });
     setOpenSlug(slug);
   }
@@ -385,6 +494,15 @@ function ItemsPanel({
       target += dir;
     }
     if (target < 0 || target >= data.items.length) return;
+
+    // Snapshot current positions so the layout effect can animate the swap.
+    const snapshot = new Map<string, DOMRect>();
+    itemEls.current.forEach((el, slug) =>
+      snapshot.set(slug, el.getBoundingClientRect()),
+    );
+    flipBefore.current = snapshot;
+    setMovedSlug(item.slug);
+
     mutate((d) => {
       const tmp = d.items[globalIdx];
       d.items[globalIdx] = d.items[target];
@@ -414,13 +532,6 @@ function ItemsPanel({
               </option>
             ))}
           </select>
-          <button
-            onClick={addItem}
-            disabled={data.categories.length === 0}
-            className="rounded-lg bg-shogun-red hover:bg-shogun-orange transition-colors text-shogun-cream font-display tracking-[0.15em] text-sm px-4 py-2 disabled:opacity-50"
-          >
-            + ADD ITEM
-          </button>
         </div>
       </div>
 
@@ -430,24 +541,67 @@ function ItemsPanel({
         </p>
       )}
 
-      <ul className="space-y-3">
-        {visible.map(({ it, idx }) => (
-          <ItemCard
-            key={it.slug}
-            item={it}
-            globalIndex={idx}
-            open={openSlug === it.slug}
-            onToggle={() =>
-              setOpenSlug((s) => (s === it.slug ? null : it.slug))
-            }
-            data={data}
-            mutate={mutate}
-            locales={locales}
-            badges={badges}
-            onMove={moveItem}
-          />
+      <div className="space-y-6">
+        {groups.map((group) => (
+          <section
+            key={group.id}
+            className="rounded-2xl border border-white/10 bg-shogun-ink/40 p-4 sm:p-5 space-y-4"
+          >
+            <header className="flex items-center gap-3 flex-wrap">
+              <h2 className="font-display tracking-[0.15em] text-shogun-cream">
+                {group.label.toUpperCase()}
+              </h2>
+              <span className="text-xs text-shogun-cream/40">
+                {group.items.length} item(s)
+              </span>
+              {!group.orphan && (
+                <button
+                  onClick={() => addItem(group.id)}
+                  className="ml-auto rounded-lg bg-shogun-red hover:bg-shogun-orange transition-colors text-shogun-cream font-display tracking-[0.15em] text-xs px-3 py-1.5"
+                >
+                  + ADD ITEM
+                </button>
+              )}
+            </header>
+
+            {group.items.length === 0 ? (
+              <p className="text-sm text-shogun-cream/40">
+                No items yet — use “+ ADD ITEM” to add one to this group.
+              </p>
+            ) : (
+              <ul className="space-y-3">
+                {group.items.map(({ it, idx }, pos) => (
+                  <ItemCard
+                    key={it.slug}
+                    item={it}
+                    globalIndex={idx}
+                    canUp={pos > 0}
+                    canDown={pos < group.items.length - 1}
+                    highlight={movedSlug === it.slug}
+                    registerEl={registerEl}
+                    open={openSlug === it.slug}
+                    onToggle={() =>
+                      setOpenSlug((s) => (s === it.slug ? null : it.slug))
+                    }
+                    data={data}
+                    mutate={mutate}
+                    locales={locales}
+                    badges={badges}
+                    onMove={moveItem}
+                  />
+                ))}
+              </ul>
+            )}
+
+            {group.orphan && (
+              <p className="text-xs text-shogun-cream/40">
+                These items reference a category that no longer exists. Open an
+                item and pick a category to file it under one.
+              </p>
+            )}
+          </section>
         ))}
-      </ul>
+      </div>
     </div>
   );
 }
@@ -455,6 +609,10 @@ function ItemsPanel({
 function ItemCard({
   item,
   globalIndex,
+  canUp,
+  canDown,
+  highlight,
+  registerEl,
   open,
   onToggle,
   data,
@@ -465,6 +623,10 @@ function ItemCard({
 }: {
   item: StoredItem;
   globalIndex: number;
+  canUp: boolean;
+  canDown: boolean;
+  highlight: boolean;
+  registerEl: (slug: string, el: HTMLLIElement | null) => void;
   open: boolean;
   onToggle: () => void;
   data: MenuData;
@@ -488,7 +650,14 @@ function ItemCard({
   }
 
   return (
-    <li className="bg-shogun-graphite border border-white/10 rounded-xl overflow-hidden">
+    <li
+      ref={(el) => registerEl(slug, el)}
+      className={`bg-shogun-graphite rounded-xl overflow-hidden border transition-[box-shadow,border-color] duration-300 ${
+        highlight
+          ? "border-shogun-orange shadow-[0_0_0_2px_var(--color-shogun-orange),0_8px_30px_-8px_rgba(0,0,0,0.6)] relative z-10"
+          : "border-white/10"
+      }`}
+    >
       {/* Summary row */}
       <div className="flex items-center gap-3 p-3">
         <div className="h-12 w-12 shrink-0 rounded-lg bg-shogun-ink overflow-hidden grid place-items-center">
@@ -523,14 +692,16 @@ function ItemCard({
         <div className="flex items-center gap-1">
           <button
             onClick={() => onMove(globalIndex, -1)}
-            className="px-2 py-1 rounded text-shogun-cream/50 hover:text-shogun-cream"
+            disabled={!canUp}
+            className="px-2 py-1 rounded text-shogun-cream/50 hover:text-shogun-cream disabled:opacity-30 disabled:hover:text-shogun-cream/50"
             title="Move up"
           >
             ↑
           </button>
           <button
             onClick={() => onMove(globalIndex, 1)}
-            className="px-2 py-1 rounded text-shogun-cream/50 hover:text-shogun-cream"
+            disabled={!canDown}
+            className="px-2 py-1 rounded text-shogun-cream/50 hover:text-shogun-cream disabled:opacity-30 disabled:hover:text-shogun-cream/50"
             title="Move down"
           >
             ↓
