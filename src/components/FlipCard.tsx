@@ -54,22 +54,16 @@ export function FlipCard({
       style={{ animationDelay: `${index * 60}ms` }}
       aria-disabled={unavailable || undefined}
     >
-      {/* Image panel — the dish stays fully visible while unavailable, just
-          dimmed and slightly desaturated, with a small caption at the bottom. */}
-      <div
-        className={`relative aspect-[4/3] overflow-hidden ${
-          unavailable ? "bg-shogun-black" : "bg-shogun-cream"
-        }`}
-      >
+      {/* Image panel — rendered normally. Unavailable items just get a small
+          "disabled" badge; the serving hours show in the info section below. */}
+      <div className="relative aspect-[4/3] overflow-hidden bg-shogun-cream">
         {photo ? (
           <Image
             src={photo}
             alt={name}
             fill
             sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-            className={`object-contain p-2 transition duration-300 ${
-              unavailable ? "grayscale-[0.5] brightness-75" : ""
-            }`}
+            className="object-contain p-2"
           />
         ) : (
           <div className="absolute inset-0 grid place-items-center px-6 py-4">
@@ -79,27 +73,16 @@ export function FlipCard({
               aria-hidden
               placeholder="blur"
               sizes="(max-width: 640px) 60vw, 220px"
-              className={`h-20 sm:h-24 w-auto select-none object-contain transition duration-300 ${
-                unavailable ? "grayscale-[0.5] brightness-75" : ""
-              }`}
+              className="h-20 sm:h-24 w-auto select-none object-contain"
             />
           </div>
         )}
 
-        {/* Unavailable caption — a soft gradient strip at the bottom only, so the
-            dish above stays clear while the status + serving hours stay legible. */}
+        {/* Disabled badge — marks the item without hiding the dish. */}
         {unavailable && (
-          <div className="absolute inset-x-0 bottom-0 flex flex-col items-center gap-0.5 bg-gradient-to-t from-shogun-black/85 via-shogun-black/45 to-transparent px-3 pt-8 pb-2 text-center">
-            <span className="font-display tracking-[0.18em] text-shogun-cream text-[11px] sm:text-xs">
-              {unavailableLabel}
-            </span>
-            {windowText && (
-              <span className="inline-flex items-center gap-1 text-shogun-orange text-[10px] sm:text-[11px]">
-                <ClockIcon className="h-3 w-3" />
-                {availableLabel} {windowText}
-              </span>
-            )}
-          </div>
+          <span className="absolute left-3 top-3 rounded-full bg-shogun-black/85 px-3 py-1 font-display tracking-[0.16em] text-shogun-cream text-[10px] sm:text-xs">
+            {unavailableLabel}
+          </span>
         )}
       </div>
 
@@ -110,20 +93,12 @@ export function FlipCard({
           className="absolute left-5 right-5 top-0 h-px bg-shogun-red/70"
         />
 
-        <h3
-          className={`font-display text-xl sm:text-2xl tracking-[0.16em] leading-tight ${
-            unavailable ? "text-shogun-cream/60" : "text-shogun-cream"
-          }`}
-        >
+        <h3 className="font-display text-xl sm:text-2xl tracking-[0.16em] leading-tight text-shogun-cream">
           {name.toUpperCase()}
         </h3>
 
         {ingredients.length > 0 ? (
-          <p
-            className={`text-[12px] leading-relaxed ${
-              unavailable ? "text-shogun-cream/40" : "text-shogun-cream/75"
-            }`}
-          >
+          <p className="text-[12px] leading-relaxed text-shogun-cream/75">
             {ingredients.join(" · ")}
           </p>
         ) : null}
@@ -142,12 +117,8 @@ export function FlipCard({
           <PriceTag
             price={item.price}
             salePrice={item.salePrice}
-            className={`font-display text-3xl leading-none ${
-              unavailable ? "text-shogun-orange/60" : "text-shogun-orange"
-            }`}
-            oldClassName={`font-display text-3xl ${
-              unavailable ? "text-shogun-red/60" : "text-shogun-red"
-            }`}
+            className="font-display text-3xl leading-none text-shogun-orange"
+            oldClassName="font-display text-3xl text-shogun-red"
           />
         </div>
       </div>
