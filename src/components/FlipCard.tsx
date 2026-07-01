@@ -54,8 +54,8 @@ export function FlipCard({
       style={{ animationDelay: `${index * 60}ms` }}
       aria-disabled={unavailable || undefined}
     >
-      {/* Image panel — the dish still shows while unavailable, just dimmed,
-          desaturated and blurred, with a scrim so the status stays legible. */}
+      {/* Image panel — the dish stays fully visible while unavailable, just
+          dimmed and slightly desaturated, with a small caption at the bottom. */}
       <div className="relative aspect-[4/3] overflow-hidden bg-shogun-cream">
         {photo ? (
           <Image
@@ -64,7 +64,7 @@ export function FlipCard({
             fill
             sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
             className={`object-contain p-2 transition duration-300 ${
-              unavailable ? "grayscale blur-[2px] opacity-70 scale-105" : ""
+              unavailable ? "grayscale-[0.5] brightness-75" : ""
             }`}
           />
         ) : (
@@ -76,28 +76,25 @@ export function FlipCard({
               placeholder="blur"
               sizes="(max-width: 640px) 60vw, 220px"
               className={`h-20 sm:h-24 w-auto select-none object-contain transition duration-300 ${
-                unavailable ? "grayscale blur-[2px] opacity-70" : ""
+                unavailable ? "grayscale-[0.5] brightness-75" : ""
               }`}
             />
           </div>
         )}
 
-        {/* Unavailable scrim + caption, over the blurred dish */}
+        {/* Unavailable caption — a soft gradient strip at the bottom only, so the
+            dish above stays clear while the status + serving hours stay legible. */}
         {unavailable && (
-          <div className="absolute inset-0 grid place-items-center text-center px-4 bg-shogun-black/45 backdrop-blur-[1px]">
-            <div>
-              <div className="font-display tracking-[0.22em] text-shogun-cream text-xs sm:text-sm">
-                {unavailableLabel}
-              </div>
-              {windowText && (
-                <div className="mt-2 inline-flex items-center gap-1.5 text-shogun-orange text-[11px] sm:text-xs">
-                  <ClockIcon className="h-3.5 w-3.5" />
-                  <span>
-                    {availableLabel} {windowText}
-                  </span>
-                </div>
-              )}
-            </div>
+          <div className="absolute inset-x-0 bottom-0 flex flex-col items-center gap-0.5 bg-gradient-to-t from-shogun-black/85 via-shogun-black/45 to-transparent px-3 pt-8 pb-2 text-center">
+            <span className="font-display tracking-[0.18em] text-shogun-cream text-[11px] sm:text-xs">
+              {unavailableLabel}
+            </span>
+            {windowText && (
+              <span className="inline-flex items-center gap-1 text-shogun-orange text-[10px] sm:text-[11px]">
+                <ClockIcon className="h-3 w-3" />
+                {availableLabel} {windowText}
+              </span>
+            )}
           </div>
         )}
       </div>
