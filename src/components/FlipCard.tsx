@@ -56,7 +56,11 @@ export function FlipCard({
     >
       {/* Image panel — the dish stays fully visible while unavailable, just
           dimmed and slightly desaturated, with a small caption at the bottom. */}
-      <div className="relative aspect-[4/3] overflow-hidden bg-shogun-cream">
+      <div
+        className={`relative aspect-[4/3] overflow-hidden ${
+          unavailable ? "bg-shogun-black" : "bg-shogun-cream"
+        }`}
+      >
         {photo ? (
           <Image
             src={photo}
