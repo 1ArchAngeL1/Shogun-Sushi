@@ -54,15 +54,35 @@ export function FlipCard({
       style={{ animationDelay: `${index * 60}ms` }}
       aria-disabled={unavailable || undefined}
     >
-      {/* Image panel */}
-      <div className="relative aspect-[4/3] bg-shogun-cream overflow-hidden">
-        {photo ? (
+      {/* Image panel — blacked out entirely while unavailable */}
+      <div
+        className={`relative aspect-[4/3] overflow-hidden ${
+          unavailable ? "bg-shogun-black" : "bg-shogun-cream"
+        }`}
+      >
+        {unavailable ? (
+          <div className="absolute inset-0 grid place-items-center text-center px-4">
+            <div>
+              <div className="font-display tracking-[0.22em] text-shogun-cream/90 text-xs sm:text-sm">
+                {unavailableLabel}
+              </div>
+              {windowText && (
+                <div className="mt-2 inline-flex items-center gap-1.5 text-shogun-orange text-[11px] sm:text-xs">
+                  <ClockIcon className="h-3.5 w-3.5" />
+                  <span>
+                    {availableLabel} {windowText}
+                  </span>
+                </div>
+              )}
+            </div>
+          </div>
+        ) : photo ? (
           <Image
             src={photo}
             alt={name}
             fill
             sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-            className={`object-contain p-2 ${unavailable ? "grayscale" : ""}`}
+            className="object-contain p-2"
           />
         ) : (
           <div className="absolute inset-0 grid place-items-center px-6 py-4">
@@ -72,29 +92,8 @@ export function FlipCard({
               aria-hidden
               placeholder="blur"
               sizes="(max-width: 640px) 60vw, 220px"
-              className={`h-20 sm:h-24 w-auto select-none object-contain ${
-                unavailable ? "grayscale opacity-70" : ""
-              }`}
+              className="h-20 sm:h-24 w-auto select-none object-contain"
             />
-          </div>
-        )}
-
-        {/* Dark "unavailable" veil with the serving window */}
-        {unavailable && (
-          <div className="absolute inset-0 z-10 grid place-items-center bg-shogun-black/70 backdrop-blur-[1px] text-center px-4">
-            <div>
-              <div className="font-display tracking-[0.22em] text-shogun-cream text-xs sm:text-sm">
-                {unavailableLabel}
-              </div>
-              {windowText && (
-                <div className="mt-1.5 inline-flex items-center gap-1.5 text-shogun-orange text-[11px] sm:text-xs">
-                  <ClockIcon className="h-3.5 w-3.5" />
-                  <span>
-                    {availableLabel} {windowText}
-                  </span>
-                </div>
-              )}
-            </div>
           </div>
         )}
       </div>
