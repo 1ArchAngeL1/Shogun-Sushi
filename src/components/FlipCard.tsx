@@ -54,16 +54,39 @@ export function FlipCard({
       style={{ animationDelay: `${index * 60}ms` }}
       aria-disabled={unavailable || undefined}
     >
-      {/* Image panel — blacked out entirely while unavailable */}
-      <div
-        className={`relative aspect-[4/3] overflow-hidden ${
-          unavailable ? "bg-shogun-black" : "bg-shogun-cream"
-        }`}
-      >
-        {unavailable ? (
-          <div className="absolute inset-0 grid place-items-center text-center px-4">
+      {/* Image panel — the dish still shows while unavailable, just dimmed,
+          desaturated and blurred, with a scrim so the status stays legible. */}
+      <div className="relative aspect-[4/3] overflow-hidden bg-shogun-cream">
+        {photo ? (
+          <Image
+            src={photo}
+            alt={name}
+            fill
+            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+            className={`object-contain p-2 transition duration-300 ${
+              unavailable ? "grayscale blur-[2px] opacity-70 scale-105" : ""
+            }`}
+          />
+        ) : (
+          <div className="absolute inset-0 grid place-items-center px-6 py-4">
+            <Image
+              src={logoSrc}
+              alt=""
+              aria-hidden
+              placeholder="blur"
+              sizes="(max-width: 640px) 60vw, 220px"
+              className={`h-20 sm:h-24 w-auto select-none object-contain transition duration-300 ${
+                unavailable ? "grayscale blur-[2px] opacity-70" : ""
+              }`}
+            />
+          </div>
+        )}
+
+        {/* Unavailable scrim + caption, over the blurred dish */}
+        {unavailable && (
+          <div className="absolute inset-0 grid place-items-center text-center px-4 bg-shogun-black/45 backdrop-blur-[1px]">
             <div>
-              <div className="font-display tracking-[0.22em] text-shogun-cream/90 text-xs sm:text-sm">
+              <div className="font-display tracking-[0.22em] text-shogun-cream text-xs sm:text-sm">
                 {unavailableLabel}
               </div>
               {windowText && (
@@ -75,25 +98,6 @@ export function FlipCard({
                 </div>
               )}
             </div>
-          </div>
-        ) : photo ? (
-          <Image
-            src={photo}
-            alt={name}
-            fill
-            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-            className="object-contain p-2"
-          />
-        ) : (
-          <div className="absolute inset-0 grid place-items-center px-6 py-4">
-            <Image
-              src={logoSrc}
-              alt=""
-              aria-hidden
-              placeholder="blur"
-              sizes="(max-width: 640px) 60vw, 220px"
-              className="h-20 sm:h-24 w-auto select-none object-contain"
-            />
           </div>
         )}
       </div>

@@ -85,7 +85,7 @@ export function SiteFooter({
                         </li>
                         <li>
                             <a
-                                href="#"
+                                href="https://www.tiktok.com/@shogun.sushi8?_r=1&_t=ZS-97cX8uXk0Si"
                                 aria-label="TikTok"
                                 className="inline-flex items-center justify-center w-10 h-10 rounded-full border border-shogun-black/15 hover:text-shogun-red hover:border-shogun-red transition-colors"
                             >
