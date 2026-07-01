@@ -9,7 +9,7 @@ import { PineBranch } from "@/components/SumiE";
 import { PriceTag } from "@/components/PriceTag";
 import { badgeColor } from "@/lib/menu";
 import { getMenuData } from "@/lib/menu-store";
-import { isVisibleNow, nowMinutesInTz, visibleItems } from "@/lib/availability";
+import { isVisibleNow, nowMinutesInTz } from "@/lib/availability";
 import { getDictionary, hasLocale, t } from "@/lib/i18n";
 
 // Read the editable menu store fresh on every request so admin edits show live.
@@ -48,20 +48,20 @@ export default async function ItemPage(
   const item = items.find((m) => m.slug === slug);
   if (!item) notFound();
 
-  // Respect the item's time-of-day window: while it's outside its visibility
-  // hours, the item is treated as not available (consistent with it being
-  // hidden from every listing). Evaluated once against the restaurant clock.
+  // The item is always shown; when it's outside its time-of-day window we just
+  // mark it "unavailable" (dimmed + serving hours shown). Restaurant clock.
   const nowMin = nowMinutesInTz();
-  if (!isVisibleNow(item, nowMin)) notFound();
+  const itemUnavailable = !isVisibleNow(item, nowMin);
+  const win = item.availability;
+  const windowText = win && win.timed ? `${win.from}–${win.to}` : null;
 
   const dict = await getDictionary(lang);
   const category = categories.find((c) => c.id === item.category);
   const catLabel = category ? t(category.label, lang) : item.category;
   const photo = item.image ?? null;
-  const related = visibleItems(
-    items.filter((m) => m.category === item.category && m.slug !== item.slug),
-    nowMin,
-  ).slice(0, 3);
+  const related = items
+    .filter((m) => m.category === item.category && m.slug !== item.slug)
+    .slice(0, 3);
 
   return (
     <main className="bg-shogun-cream text-shogun-black min-h-screen">
@@ -97,12 +97,28 @@ export default async function ItemPage(
                 fill
                 sizes="(max-width: 768px) 100vw, 50vw"
                 preload
-                className="object-contain p-6 md:p-10"
+                className={`object-contain p-6 md:p-10 ${
+                  itemUnavailable ? "grayscale opacity-70" : ""
+                }`}
               />
+              {itemUnavailable && (
+                <div className="absolute inset-0 grid place-items-center bg-shogun-black/45 backdrop-blur-[1px]">
+                  <span className="font-display tracking-[0.22em] text-shogun-cream text-sm sm:text-base">
+                    {dict.availability.unavailable.toUpperCase()}
+                  </span>
+                </div>
+              )}
             </div>
           ) : (
             <div className="relative bg-shogun-cream border border-shogun-black/15 rounded-3xl p-8 md:p-12 grid place-items-center min-h-[260px] shadow-[0_28px_60px_-40px_rgba(0,0,0,0.35)]">
               <ItemArt item={item} width={360} />
+              {itemUnavailable && (
+                <div className="absolute inset-0 grid place-items-center rounded-3xl bg-shogun-black/45 backdrop-blur-[1px]">
+                  <span className="font-display tracking-[0.22em] text-shogun-cream text-sm sm:text-base">
+                    {dict.availability.unavailable.toUpperCase()}
+                  </span>
+                </div>
+              )}
             </div>
           )}
 
@@ -124,6 +140,32 @@ export default async function ItemPage(
                     {dict.badges[b].toUpperCase()}
                   </span>
                 ))}
+              </div>
+            )}
+
+            {windowText && (
+              <div
+                className={`mt-5 inline-flex items-center gap-2 rounded-lg border px-3 py-2 text-sm ${
+                  itemUnavailable
+                    ? "border-shogun-red/30 bg-shogun-red/5 text-shogun-red"
+                    : "border-shogun-black/15 bg-shogun-black/[0.03] text-shogun-black/70"
+                }`}
+              >
+                <svg viewBox="0 0 24 24" fill="none" aria-hidden className="h-4 w-4">
+                  <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="2" />
+                  <path
+                    d="M12 7.5V12l3 2"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+                <span className="font-display tracking-[0.1em]">
+                  {itemUnavailable
+                    ? `${dict.availability.unavailable} · ${dict.availability.available} ${windowText}`
+                    : `${dict.availability.available} ${windowText}`}
+                </span>
               </div>
             )}
 
@@ -181,6 +223,11 @@ export default async function ItemPage(
           <div className="grid sm:grid-cols-3 gap-5">
             {related.map((r) => {
               const relatedPhoto = r.image ?? null;
+              const rUnavailable = !isVisibleNow(r, nowMin);
+              const rWindow =
+                r.availability && r.availability.timed
+                  ? `${r.availability.from}–${r.availability.to}`
+                  : null;
               return (
                 <Link
                   key={r.slug}
@@ -194,12 +241,32 @@ export default async function ItemPage(
                         alt={t(r.name, lang)}
                         fill
                         sizes="(max-width: 640px) 100vw, 33vw"
-                        className="object-contain p-3"
+                        className={`object-contain p-3 ${
+                          rUnavailable ? "grayscale opacity-70" : ""
+                        }`}
                       />
+                      {rUnavailable && (
+                        <div className="absolute inset-0 grid place-items-center bg-shogun-black/45 text-center px-2">
+                          <span className="font-display tracking-[0.15em] text-shogun-cream text-[10px]">
+                            {rWindow
+                              ? `${dict.availability.available} ${rWindow}`
+                              : dict.availability.unavailable}
+                          </span>
+                        </div>
+                      )}
                     </div>
                   ) : (
-                    <div className="bg-shogun-cream p-5 grid place-items-center min-h-[120px] border-b border-shogun-black/10">
+                    <div className="relative bg-shogun-cream p-5 grid place-items-center min-h-[120px] border-b border-shogun-black/10">
                       <ItemArt item={r} width={180} />
+                      {rUnavailable && (
+                        <div className="absolute inset-0 grid place-items-center bg-shogun-black/45 text-center px-2">
+                          <span className="font-display tracking-[0.15em] text-shogun-cream text-[10px]">
+                            {rWindow
+                              ? `${dict.availability.available} ${rWindow}`
+                              : dict.availability.unavailable}
+                          </span>
+                        </div>
+                      )}
                     </div>
                   )}
                   <div className="p-5">

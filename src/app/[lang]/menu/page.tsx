@@ -7,7 +7,7 @@ import { FlipCard } from "@/components/FlipCard";
 import { categoryEmoji } from "@/components/ItemArt";
 import { PineBranch, CliffPagoda } from "@/components/SumiE";
 import { getMenuData } from "@/lib/menu-store";
-import { visibleItems } from "@/lib/availability";
+import { isVisibleNow, nowMinutesInTz } from "@/lib/availability";
 import { getDictionary, hasLocale, t } from "@/lib/i18n";
 
 // Read the editable menu store fresh on every request so admin edits show live.
@@ -26,13 +26,10 @@ export default async function MenuPage(props: PageProps<"/[lang]/menu">) {
   const { lang } = await props.params;
   if (!hasLocale(lang)) notFound();
   const dict = await getDictionary(lang);
-  const { categories, items: allItems } = await getMenuData();
-  // Hide items outside their configured time-of-day window (restaurant-local).
-  const items = visibleItems(allItems);
-  // Only surface categories that have at least one item visible right now.
-  const shownCategories = categories.filter((c) =>
-    items.some((m) => m.category === c.id),
-  );
+  const { categories, items } = await getMenuData();
+  // Time-restricted items are still shown, just dimmed as "unavailable" when
+  // outside their window. Evaluate once against the restaurant clock.
+  const nowMin = nowMinutesInTz();
 
   return (
     <main className="bg-shogun-cream text-shogun-black min-h-screen">
@@ -72,7 +69,7 @@ export default async function MenuPage(props: PageProps<"/[lang]/menu">) {
       >
         <div className="mx-auto max-w-6xl px-2 sm:px-6">
           <ul className="flex gap-1 overflow-x-auto no-scrollbar py-2 -mx-2 sm:mx-0 px-2 sm:px-0">
-            {shownCategories.map((c) => (
+            {categories.map((c) => (
               <li key={c.id}>
                 <a
                   href={`#${c.id}`}
@@ -88,7 +85,7 @@ export default async function MenuPage(props: PageProps<"/[lang]/menu">) {
 
       {/* ─── Category sections ────────────────────────── */}
       <div className="mx-auto max-w-6xl px-4 sm:px-6 py-12 md:py-16 space-y-20">
-        {shownCategories.map((cat) => {
+        {categories.map((cat) => {
           const catItems = items.filter((m) => m.category === cat.id);
           if (catItems.length === 0) return null;
           return (
@@ -111,6 +108,9 @@ export default async function MenuPage(props: PageProps<"/[lang]/menu">) {
                     index={i}
                     name={t(item.name, lang)}
                     ingredients={t(item.ingredients, lang)}
+                    unavailable={!isVisibleNow(item, nowMin)}
+                    unavailableLabel={dict.availability.unavailable}
+                    availableLabel={dict.availability.available}
                   />
                 ))}
               </div>

@@ -5,7 +5,7 @@ import { SeigahaBand } from "@/components/SeigahaBand";
 import { FlipCard } from "@/components/FlipCard";
 import { CategoryNav } from "@/components/CategoryNav";
 import { getMenuData } from "@/lib/menu-store";
-import { visibleItems } from "@/lib/availability";
+import { isVisibleNow, nowMinutesInTz } from "@/lib/availability";
 import { getDictionary, hasLocale, t } from "@/lib/i18n";
 
 // Read the editable menu store fresh on every request so admin edits show live.
@@ -15,13 +15,10 @@ export default async function LandingPage(props: PageProps<"/[lang]">) {
   const { lang } = await props.params;
   if (!hasLocale(lang)) notFound();
   const dict = await getDictionary(lang);
-  const { categories, items: allItems } = await getMenuData();
-  // Hide items outside their configured time-of-day window (restaurant-local).
-  const items = visibleItems(allItems);
-  // Only surface categories that have at least one item visible right now.
-  const shownCategories = categories.filter((c) =>
-    items.some((m) => m.category === c.id),
-  );
+  const { categories, items } = await getMenuData();
+  // Time-restricted items are still shown, just dimmed as "unavailable" when
+  // outside their window. Evaluate once against the restaurant clock.
+  const nowMin = nowMinutesInTz();
 
   return (
     <main className="bg-shogun-cream text-shogun-black min-h-screen">
@@ -50,7 +47,7 @@ export default async function LandingPage(props: PageProps<"/[lang]">) {
 
       {/* ─── Sticky category nav ──────────────────────── */}
       <CategoryNav
-        categories={shownCategories.map((c) => ({
+        categories={categories.map((c) => ({
           slug: c.id,
           label: t(c.label, lang),
         }))}
@@ -58,7 +55,7 @@ export default async function LandingPage(props: PageProps<"/[lang]">) {
 
       {/* ─── Menu — directly rendered with float-up ───── */}
       <div className="mx-auto max-w-6xl px-4 sm:px-6 py-12 md:py-16 space-y-20">
-        {shownCategories.map((cat) => {
+        {categories.map((cat) => {
           const catItems = items.filter((m) => m.category === cat.id);
           if (catItems.length === 0) return null;
           return (
@@ -77,6 +74,9 @@ export default async function LandingPage(props: PageProps<"/[lang]">) {
                     index={i}
                     name={t(item.name, lang)}
                     ingredients={t(item.ingredients, lang)}
+                    unavailable={!isVisibleNow(item, nowMin)}
+                    unavailableLabel={dict.availability.unavailable}
+                    availableLabel={dict.availability.available}
                   />
                 ))}
               </div>

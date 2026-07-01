@@ -66,6 +66,10 @@ export const ka: Dictionary = {
     items: "კერძი",
     pieces: "ცალი",
   },
+  availability: {
+    unavailable: "ამჟამად მიუწვდომელია",
+    available: "ხელმისაწვდომია",
+  },
   detail: {
     breadcrumbMenu: "მენიუ",
     ingredientsKanji: "材料",

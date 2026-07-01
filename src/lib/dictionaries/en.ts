@@ -64,6 +64,10 @@ export const en = {
     items: "ITEMS",
     pieces: "PCS",
   },
+  availability: {
+    unavailable: "Currently unavailable",
+    available: "Available",
+  },
   detail: {
     breadcrumbMenu: "MENU",
     ingredientsKanji: "材料",
