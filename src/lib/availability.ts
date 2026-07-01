@@ -35,16 +35,22 @@ export function nowMinutesInTz(
   tz: string = RESTAURANT_TZ,
   date: Date = new Date(),
 ): number {
-  const parts = new Intl.DateTimeFormat("en-US", {
-    timeZone: tz,
-    hour: "2-digit",
-    minute: "2-digit",
-    hour12: false,
-  }).formatToParts(date);
-  const hour = Number(parts.find((p) => p.type === "hour")?.value ?? "0");
-  const minute = Number(parts.find((p) => p.type === "minute")?.value ?? "0");
-  // `hour12: false` can emit "24" at midnight in some runtimes — normalize it.
-  return (hour % 24) * 60 + minute;
+  try {
+    const parts = new Intl.DateTimeFormat("en-US", {
+      timeZone: tz,
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: false,
+    }).formatToParts(date);
+    const hour = Number(parts.find((p) => p.type === "hour")?.value ?? "0");
+    const minute = Number(parts.find((p) => p.type === "minute")?.value ?? "0");
+    // `hour12: false` can emit "24" at midnight in some runtimes — normalize it.
+    return (hour % 24) * 60 + minute;
+  } catch {
+    // Runtime without full timezone data (or an unknown tz): fall back to the
+    // server's local clock rather than throwing and blanking the whole page.
+    return date.getHours() * 60 + date.getMinutes();
+  }
 }
 
 /**
