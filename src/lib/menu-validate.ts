@@ -1,4 +1,4 @@
-import { allBadges, type Badge } from "./menu";
+import { allBadges, type Availability, type Badge } from "./menu";
 import type { MenuData, StoredCategory, StoredItem } from "./menu-store";
 
 /**
@@ -121,6 +121,8 @@ function normalizeItem(
   const image =
     typeof it.image === "string" && it.image.trim() ? it.image.trim() : null;
 
+  const availability = normalizeAvailability(it.availability);
+
   return {
     slug,
     name: { en: nameEn || nameKa, ka: nameKa || nameEn },
@@ -138,7 +140,36 @@ function normalizeItem(
     salePrice,
     badges,
     image,
+    availability,
   };
+}
+
+/** Normalize an "HH:MM" 24h time, or return null if it can't be parsed. */
+function normalizeTime(v: unknown): string | null {
+  if (typeof v !== "string") return null;
+  const m = /^(\d{1,2}):(\d{2})$/.exec(v.trim());
+  if (!m) return null;
+  const h = Number(m[1]);
+  const min = Number(m[2]);
+  if (!Number.isInteger(h) || !Number.isInteger(min)) return null;
+  if (h < 0 || h > 23 || min < 0 || min > 59) return null;
+  return `${String(h).padStart(2, "0")}:${String(min).padStart(2, "0")}`;
+}
+
+/**
+ * Normalize the optional per-item availability window. Returns `null` (no
+ * restriction) unless the admin has meaningfully configured it. Malformed times
+ * fall back to a full day so a bad value never silently hides an item.
+ */
+function normalizeAvailability(raw: unknown): Availability | null {
+  if (!raw || typeof raw !== "object") return null;
+  const a = raw as Record<string, unknown>;
+  const from = normalizeTime(a.from);
+  const to = normalizeTime(a.to);
+  const timed = a.timed === true;
+  // Nothing set at all → treat as "no restriction" and drop the object.
+  if (!timed && from == null && to == null) return null;
+  return { timed, from: from ?? "00:00", to: to ?? "23:59" };
 }
 
 function toStringArray(v: unknown): string[] {

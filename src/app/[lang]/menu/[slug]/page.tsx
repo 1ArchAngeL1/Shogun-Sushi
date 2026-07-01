@@ -9,6 +9,7 @@ import { PineBranch } from "@/components/SumiE";
 import { PriceTag } from "@/components/PriceTag";
 import { badgeColor } from "@/lib/menu";
 import { getMenuData } from "@/lib/menu-store";
+import { isVisibleNow, nowMinutesInTz, visibleItems } from "@/lib/availability";
 import { getDictionary, hasLocale, t } from "@/lib/i18n";
 
 // Read the editable menu store fresh on every request so admin edits show live.
@@ -47,13 +48,20 @@ export default async function ItemPage(
   const item = items.find((m) => m.slug === slug);
   if (!item) notFound();
 
+  // Respect the item's time-of-day window: while it's outside its visibility
+  // hours, the item is treated as not available (consistent with it being
+  // hidden from every listing). Evaluated once against the restaurant clock.
+  const nowMin = nowMinutesInTz();
+  if (!isVisibleNow(item, nowMin)) notFound();
+
   const dict = await getDictionary(lang);
   const category = categories.find((c) => c.id === item.category);
   const catLabel = category ? t(category.label, lang) : item.category;
   const photo = item.image ?? null;
-  const related = items
-    .filter((m) => m.category === item.category && m.slug !== item.slug)
-    .slice(0, 3);
+  const related = visibleItems(
+    items.filter((m) => m.category === item.category && m.slug !== item.slug),
+    nowMin,
+  ).slice(0, 3);
 
   return (
     <main className="bg-shogun-cream text-shogun-black min-h-screen">

@@ -22,6 +22,19 @@ export const allBadges: Badge[] = [
   "gluten-free",
 ];
 
+/**
+ * Time-of-day visibility window for a menu item. When `timed` is true, the item
+ * is only shown on the public site while the current restaurant-local time falls
+ * inside `[from, to]`. `from`/`to` are 24h "HH:MM" strings. A window whose `to`
+ * is earlier than its `from` is treated as spanning midnight (e.g. a late-night
+ * item available "22:00"–"02:00"). See `lib/availability.ts` for the evaluation.
+ */
+export type Availability = {
+  timed: boolean;
+  from: string;
+  to: string;
+};
+
 export type MenuItem = {
   slug: string;
   name: Translatable<string>;
@@ -39,6 +52,9 @@ export type MenuItem = {
   // Path to the product image, usable directly as a `next/image` src
   // (e.g. "/uploads/foo.png"). Null/undefined falls back to generated art.
   image?: string | null;
+  // Optional time-of-day visibility window. Null/undefined (or `timed: false`)
+  // means the item is always visible. See `Availability`.
+  availability?: Availability | null;
 };
 
 // ── Editable-store shapes (client-safe) ────────────────────────────────

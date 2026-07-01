@@ -10,7 +10,12 @@ import {
 } from "react";
 import { useRouter } from "next/navigation";
 import { saleOf } from "@/lib/menu";
-import type { MenuData, StoredCategory, StoredItem } from "@/lib/menu";
+import type {
+  Availability,
+  MenuData,
+  StoredCategory,
+  StoredItem,
+} from "@/lib/menu";
 
 type SaveState = "idle" | "saving" | "saved" | "error";
 
@@ -469,6 +474,7 @@ function ItemsPanel({
       salePrice: null,
       badges: [],
       image: null,
+      availability: null,
     };
     mutate((d) => {
       // Insert at the end of this category's group rather than the very end,
@@ -687,6 +693,11 @@ function ItemCard({
             ) : (
               <>{item.price} ₾</>
             )}
+            {item.availability?.timed && (
+              <span className="ml-1 text-sky-400">
+                · ⏱ {item.availability.from}–{item.availability.to}
+              </span>
+            )}
           </div>
         </button>
         <div className="flex items-center gap-1">
@@ -851,6 +862,12 @@ function ItemCard({
             </div>
           </div>
 
+          {/* Availability window */}
+          <AvailabilityField
+            value={item.availability ?? null}
+            onChange={(next) => setField((it) => (it.availability = next))}
+          />
+
           {/* Image */}
           <ImageField
             value={item.image ?? null}
@@ -947,6 +964,104 @@ function ImageField({
           {err && <p className="text-xs text-red-400">{err}</p>}
         </div>
       </div>
+    </div>
+  );
+}
+
+// ───────────────────────────────────────────────────────────────────────
+// Availability window
+// ───────────────────────────────────────────────────────────────────────
+
+const DEFAULT_FROM = "11:00";
+const DEFAULT_TO = "22:00";
+
+/**
+ * Toggle + from/to time inputs controlling when an item is visible on the site.
+ * When the toggle is off the item is always shown; the entered times are kept so
+ * turning it back on restores them. Times are the restaurant's local clock.
+ */
+function AvailabilityField({
+  value,
+  onChange,
+}: {
+  value: Availability | null;
+  onChange: (next: Availability | null) => void;
+}) {
+  const timed = value?.timed ?? false;
+  const from = value?.from ?? DEFAULT_FROM;
+  const to = value?.to ?? DEFAULT_TO;
+
+  // Zero-padded "HH:MM" strings compare correctly as plain strings.
+  const overnight = timed && from > to;
+
+  return (
+    <div>
+      <div className="text-xs tracking-[0.2em] text-shogun-cream/60 font-display mb-2">
+        AVAILABILITY
+      </div>
+
+      <button
+        type="button"
+        role="switch"
+        aria-checked={timed}
+        onClick={() => onChange({ timed: !timed, from, to })}
+        className="inline-flex items-center gap-3 group"
+      >
+        <span
+          className={`relative h-6 w-11 rounded-full transition-colors ${
+            timed ? "bg-shogun-orange" : "bg-white/15"
+          }`}
+        >
+          <span
+            className={`absolute top-0.5 left-0.5 h-5 w-5 rounded-full bg-shogun-cream transition-transform ${
+              timed ? "translate-x-5" : "translate-x-0"
+            }`}
+          />
+        </span>
+        <span className="text-sm text-shogun-cream/80 group-hover:text-shogun-cream">
+          Only show during set hours
+        </span>
+      </button>
+
+      {timed && (
+        <>
+          <div className="mt-3 grid sm:grid-cols-2 gap-3">
+            <label className="block">
+              {fieldLabel("From")}
+              <input
+                type="time"
+                value={from}
+                onChange={(e) =>
+                  onChange({ timed, from: e.target.value || "00:00", to })
+                }
+                className={inputCls}
+              />
+            </label>
+            <label className="block">
+              {fieldLabel("To")}
+              <input
+                type="time"
+                value={to}
+                onChange={(e) =>
+                  onChange({ timed, from, to: e.target.value || "23:59" })
+                }
+                className={inputCls}
+              />
+            </label>
+          </div>
+          <p className="mt-2 text-[11px] text-shogun-cream/40">
+            {overnight
+              ? `Overnight window — visible from ${from} until ${to} the next day.`
+              : `Visible daily between ${from} and ${to}, restaurant local time.`}
+          </p>
+        </>
+      )}
+
+      {!timed && (
+        <p className="mt-2 text-[11px] text-shogun-cream/40">
+          Always visible. Turn on to limit this item to a daily time window.
+        </p>
+      )}
     </div>
   );
 }
