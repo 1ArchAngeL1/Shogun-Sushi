@@ -43,3 +43,6 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# original (pre-compression) photography — kept locally, see scripts/optimize-images.mjs
+/assets-src

@@ -1,5 +1,5 @@
 import Image from "next/image";
-import seigahaSrc from "../../public/SHOGUN SHUSHI-03.png";
+import seigahaSrc from "../../public/SHOGUN SHUSHI-03.webp";
 
 /**
  * Vertical seigaiha (青海波) side strip rendered from the brand pattern PNG.

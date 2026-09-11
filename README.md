@@ -20,6 +20,26 @@ You can start editing the page by modifying `app/page.tsx`. The page auto-update
 
 This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
 
+## Product photography
+
+Menu photos are served as pre-compressed WebP. The originals (2880px PNGs, ~4.5 MB
+each) live in `assets-src/` — git-ignored, and not deployed, because `next/image`
+would otherwise have to decode a full-size PNG on the first request for every
+width it serves.
+
+After dropping new photos into `assets-src/product-photos/`, run:
+
+```bash
+npm run optimize:images
+```
+
+That writes the web-facing `.webp` files into `public/სუში გლოვოსთვის/`, regenerates
+the inline blur placeholders in `src/lib/productImageBlur.ts`, and repoints any
+matching paths in the menu store. Commit the `.webp` files and the blur module.
+
+Images uploaded through the admin panel are compressed the same way on the way in,
+so nothing else needs doing for those.
+
 ## Learn More
 
 To learn more about Next.js, take a look at the following resources:

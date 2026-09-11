@@ -1,4 +1,4 @@
-import seigahaSrc from "../../public/SHOGUN SHUSHI-03.png";
+import seigahaSrc from "../../public/SHOGUN SHUSHI-03.webp";
 
 /**
  * Minimal horizontal seigaiha banner — the brand PNG (841×3819) rotated 90°

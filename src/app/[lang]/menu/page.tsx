@@ -85,7 +85,7 @@ export default async function MenuPage(props: PageProps<"/[lang]/menu">) {
 
       {/* ─── Category sections ────────────────────────── */}
       <div className="mx-auto max-w-6xl px-4 sm:px-6 py-12 md:py-16 space-y-20">
-        {categories.map((cat) => {
+        {categories.map((cat, catIndex) => {
           const catItems = items.filter((m) => m.category === cat.id);
           if (catItems.length === 0) return null;
           return (
@@ -111,6 +111,10 @@ export default async function MenuPage(props: PageProps<"/[lang]/menu">) {
                     unavailable={!isVisibleNow(item, nowMin)}
                     unavailableLabel={dict.availability.unavailable}
                     availableLabel={dict.availability.available}
+                    // The first row of the first section is above the fold, so
+                    // let it load immediately instead of waiting for the lazy
+                    // observer to fire after hydration.
+                    eager={catIndex === 0 && i < 3}
                   />
                 ))}
               </div>

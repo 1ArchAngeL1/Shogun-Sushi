@@ -21,6 +21,20 @@ type SaveState = "idle" | "saving" | "saved" | "error";
 
 const LOCALE_LABEL: Record<string, string> = { en: "English", ka: "ქართული" };
 
+/**
+ * Thumbnail URL for the admin previews. These are plain `<img>` tags (the paths
+ * are arbitrary strings typed into the editor, not statically known), so they
+ * would otherwise pull the full-size photo into a 48px box — ~50 of them per
+ * page load. Routing through the image optimizer serves a few KB instead.
+ * `width` must be one of the `imageSizes` in next.config.js.
+ */
+function thumbUrl(src: string, width: 64 | 128): string {
+  // The optimizer rejects SVG unless `dangerouslyAllowSVG` is on, and a vector
+  // needs no resizing anyway.
+  if (src.toLowerCase().endsWith(".svg")) return src;
+  return `/_next/image?url=${encodeURIComponent(src)}&w=${width}&q=75`;
+}
+
 /** useLayoutEffect that degrades to useEffect during SSR (avoids the warning). */
 const useIsoLayoutEffect =
   typeof window !== "undefined" ? useLayoutEffect : useEffect;
@@ -670,8 +684,10 @@ function ItemCard({
           {item.image ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img
-              src={item.image}
+              src={thumbUrl(item.image, 64)}
               alt=""
+              loading="lazy"
+              decoding="async"
               className="h-full w-full object-contain"
             />
           ) : (
@@ -937,7 +953,12 @@ function ImageField({
         <div className="h-24 w-24 rounded-lg bg-shogun-ink overflow-hidden grid place-items-center border border-white/10">
           {value ? (
             // eslint-disable-next-line @next/next/no-img-element
-            <img src={value} alt="" className="h-full w-full object-contain" />
+            <img
+              src={thumbUrl(value, 128)}
+              alt=""
+              decoding="async"
+              className="h-full w-full object-contain"
+            />
           ) : (
             <span className="text-shogun-cream/30 text-xs">none</span>
           )}

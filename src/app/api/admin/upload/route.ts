@@ -1,12 +1,20 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { promises as fs } from "fs";
 import path from "path";
+import sharp from "sharp";
 import { isAuthed } from "@/lib/admin-auth";
 
 // Stored outside `public/` because `next start` won't serve files added after
 // boot; they're streamed back via the /api/uploads/[name] route handler.
 const UPLOAD_DIR = path.join(process.cwd(), "data", "uploads");
-const MAX_BYTES = 8 * 1024 * 1024; // 8 MB
+const MAX_BYTES = 8 * 1024 * 1024; // 8 MB of upload
+
+// Phone cameras happily produce 4000px, 6 MB photos. Nothing on the site is
+// rendered wider than ~1200 device px, so bake every still image down to WebP
+// on the way in — otherwise `next/image` has to decode the full-size original
+// on the first request for every width it serves.
+const MAX_WIDTH = 1600;
+const WEBP_QUALITY = 80;
 
 const EXT_BY_TYPE: Record<string, string> = {
   "image/png": "png",
@@ -17,6 +25,9 @@ const EXT_BY_TYPE: Record<string, string> = {
   "image/avif": "avif",
   "image/svg+xml": "svg",
 };
+
+// Vectors need no resizing, and GIFs may be animated — both are stored as-is.
+const PASS_THROUGH = new Set(["svg", "gif"]);
 
 export async function POST(request: NextRequest) {
   if (!(await isAuthed())) {
@@ -62,11 +73,31 @@ export async function POST(request: NextRequest) {
       .replace(/^-+|-+$/g, "")
       .slice(0, 40) || "image";
   const unique = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
-  const filename = `${base}-${unique}.${ext}`;
+
+  const original = Buffer.from(await file.arrayBuffer());
+  let bytes: Uint8Array = original;
+  let outExt = ext;
+
+  if (!PASS_THROUGH.has(ext)) {
+    try {
+      bytes = await sharp(original)
+        .rotate() // honour the EXIF orientation before it gets stripped
+        .resize({ width: MAX_WIDTH, withoutEnlargement: true })
+        .webp({ quality: WEBP_QUALITY })
+        .toBuffer();
+      outExt = "webp";
+    } catch {
+      return NextResponse.json(
+        { error: "That file could not be read as an image." },
+        { status: 400 },
+      );
+    }
+  }
+
+  const filename = `${base}-${unique}.${outExt}`;
 
   try {
     await fs.mkdir(UPLOAD_DIR, { recursive: true });
-    const bytes = Buffer.from(await file.arrayBuffer());
     await fs.writeFile(path.join(UPLOAD_DIR, filename), bytes);
   } catch {
     return NextResponse.json(

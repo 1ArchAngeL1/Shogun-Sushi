@@ -1,6 +1,7 @@
 import Image from "next/image";
 import logoSrc from "../../public/logo.png";
 import type { MenuItem } from "@/lib/menu";
+import { blurFor } from "@/lib/productImageBlur";
 import { PriceTag } from "./PriceTag";
 
 /** Small inline clock glyph used on time-restricted items. */
@@ -27,6 +28,7 @@ export function FlipCard({
   unavailable = false,
   unavailableLabel,
   availableLabel,
+  eager = false,
 }: {
   item: MenuItem;
   index: number;
@@ -38,8 +40,11 @@ export function FlipCard({
   unavailableLabel?: string;
   /** Localized "Available" word, rendered as e.g. "Available 11:00–22:00". */
   availableLabel?: string;
+  /** Set on the handful of cards above the fold so they skip lazy-loading. */
+  eager?: boolean;
 }) {
   const photo = item.image ?? null;
+  const blur = blurFor(photo);
   const win = item.availability;
   const windowText =
     win && win.timed ? `${win.from}–${win.to}` : null;
@@ -62,7 +67,12 @@ export function FlipCard({
             src={photo}
             alt={name}
             fill
-            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+            // One card per row on phones, two from `sm`, three inside the
+            // 1152px container from `lg` — never the full viewport width.
+            sizes="(max-width: 640px) 92vw, (max-width: 1024px) 46vw, 352px"
+            loading={eager ? "eager" : "lazy"}
+            placeholder={blur ? "blur" : "empty"}
+            blurDataURL={blur}
             className="object-contain p-2"
           />
         ) : (

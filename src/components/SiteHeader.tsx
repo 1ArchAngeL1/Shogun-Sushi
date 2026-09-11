@@ -81,7 +81,7 @@ export function SiteHeader({
             <Image
               src={logoSrc}
               alt="Shogun Sushi"
-              priority
+              preload
               placeholder="blur"
               sizes="(max-width: 640px) 170px, 220px"
               className="h-14 sm:h-16 w-auto select-none"

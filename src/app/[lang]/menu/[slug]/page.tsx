@@ -9,6 +9,7 @@ import { PineBranch } from "@/components/SumiE";
 import { PriceTag } from "@/components/PriceTag";
 import { badgeColor } from "@/lib/menu";
 import { getMenuData } from "@/lib/menu-store";
+import { blurFor } from "@/lib/productImageBlur";
 import { isVisibleNow, nowMinutesInTz } from "@/lib/availability";
 import { getDictionary, hasLocale, t } from "@/lib/i18n";
 
@@ -59,6 +60,7 @@ export default async function ItemPage(
   const category = categories.find((c) => c.id === item.category);
   const catLabel = category ? t(category.label, lang) : item.category;
   const photo = item.image ?? null;
+  const photoBlur = blurFor(photo);
   const related = items
     .filter((m) => m.category === item.category && m.slug !== item.slug)
     .slice(0, 3);
@@ -97,6 +99,8 @@ export default async function ItemPage(
                 fill
                 sizes="(max-width: 768px) 100vw, 50vw"
                 preload
+                placeholder={photoBlur ? "blur" : "empty"}
+                blurDataURL={photoBlur}
                 className={`object-contain p-6 md:p-10 ${
                   itemUnavailable ? "grayscale opacity-70" : ""
                 }`}
@@ -240,7 +244,9 @@ export default async function ItemPage(
                         src={relatedPhoto}
                         alt={t(r.name, lang)}
                         fill
-                        sizes="(max-width: 640px) 100vw, 33vw"
+                        sizes="(max-width: 640px) 92vw, 352px"
+                        placeholder={blurFor(relatedPhoto) ? "blur" : "empty"}
+                        blurDataURL={blurFor(relatedPhoto)}
                         className={`object-contain p-3 ${
                           rUnavailable ? "grayscale opacity-70" : ""
                         }`}
